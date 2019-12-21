@@ -12,11 +12,7 @@
   "dependencies": {
     "@mapbox/mapbox-gl-geocoder": "^2.3.0",
     "@mapbox/tilebelt": "^1.0.1",
-    "d3-geo": "^1.10.0",
     "mapbox-gl": "^1.6.0",
-    "ngraph.graph": "0.0.14",
-    "rafor": "^1.0.2",
-    "tiny.xml": "^1.0.1",
     "tinycolor2": "^1.4.1",
     "vue": "^2.5.2",
     "vue-color": "^2.4.6",

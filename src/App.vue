@@ -120,12 +120,10 @@
 
 <script>
 import appState from './appState';
-import bus from './bus';
 import ColorPicker from './components/ColorPicker';
 import Loading from './components/Loading';
 import About from './components/About';
 import generateZazzleLink from './lib/getZazzleLink';
-
 
 export default {
   name: 'App',
