@@ -12,7 +12,7 @@ export function loadImage(url) {
   });
 }
 
-export function getRegion(ne, sw, zoom, progress) {
+export function getRegionElevation(ne, sw, zoom, progress) {
   if (!progress) progress = {};
 
   const renderHD = true;
