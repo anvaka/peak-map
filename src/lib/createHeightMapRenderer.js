@@ -8,7 +8,7 @@ import { getRegionElevation } from '../elevation';
 /**
  * 
  * @param {*} appState - @see ../appState.js
- * @param {*} map  - mapbox map instancek
+ * @param {*} map  - mapbox map instance
  * @param {*} canvas  - where the lines should be rendered
  */
 export default function createHeightMapRenderer(appState, map, canvas) {
