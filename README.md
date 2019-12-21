@@ -1,6 +1,6 @@
 # Peak map
 
-This website allows you to visualize elevation of any area on the map with 
+[This website](https://anvaka.github.io/peak-map) allows you to visualize elevation of any area on the map with 
 filled area charts (also known as "Joy Chart"):
 
 ![quick demo](images/quick_demo.gif)
@@ -13,6 +13,6 @@ The rendering of the lines is done on canvas overlay, [using regular 2D canvas c
 
 ## Bonus
 
-You can print the map onto a mug if you like the final result:
+You can print the final map onto a mug if you like the result:
 
 ![demo](images/zazzle_mug.png)
