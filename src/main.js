@@ -31,31 +31,6 @@ function init() {
   map = new mapboxgl.Map({
       trackResize: true,
       container: 'map',
-    //   style: {
-    //     "version": 8,
-    //     "name": "Hillshade-only",
-    //     "center": [-112.81596278901452, 37.251160384573595],
-    //     "zoom": 11.560975632435424,
-    //     "bearing": 0,
-    //     "pitch": 0,
-    //     "sources": {
-    //         "mapbox://mapbox.terrain-rgb": {
-    //             "url": "mapbox://mapbox.terrain-rgb",
-    //             "type": "raster-dem",
-    //             "tileSize": 256
-    //         }
-    //     },
-    //     "layers": [
-    //         {
-    //             "id": "mapbox-terrain-rgb",
-    //             "type": "hillshade",
-    //             "source": "mapbox://mapbox.terrain-rgb",
-    //             "layout": {},
-    //             "paint": {}
-    //         }
-    //     ]
-    // },
-      
       minZoom: 0,
       style: 'mapbox://styles/mapbox/light-v10',
       center: [-122.574,47.727],
@@ -69,7 +44,21 @@ function init() {
   map.on('zoomend', updateHeights);
   map.on('dragstart', hideHeights);
   map.on('dragend', updateHeights);
-  map.on('load', updateHeights);
+  map.on('load', function() {
+    // map.showTileBoundaries = true;
+    // map.addSource('dem', {
+    //     'type': 'raster-dem',
+    //     'url': 'mapbox://mapbox.terrain-rgb',
+    //     tileSize: 256*2
+    // });
+    // map.addLayer({
+    //   id: 'hillshading',
+    //   type: 'hillshade',
+    //   source: 'dem',
+    // }, 'water-shadow');
+  
+    updateHeights();
+  });
 
   map.dragRotate.disable();
   map.touchZoomRotate.disableRotation();
