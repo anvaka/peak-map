@@ -1,7 +1,7 @@
 # Peak map
 
 [This website](https://anvaka.github.io/peak-map) allows you to visualize elevation of any area on the map with 
-filled area charts (also known as "Joy Chart"):
+filled area charts (also known as a `joy plot`):
 
 ![quick demo](images/quick_demo.gif)
 
