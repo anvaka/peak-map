@@ -4,14 +4,17 @@
     <div class='content'>
       <h3>Peak map <a class='close bold' href='#' @click.prevent='close'>close</a></h3>
       <p>
-        This website is allows you to pick any region of the world and print its high points in artistic, joyful manner.
+        This website allows you to pick any region of the world and print its high points in artistic, joyful manner.
       </p>
 
-      <p>After the map is generated you can print it on a mug with Zazzle. This would not only delight a happy 
+      <p>After the map is generated you can print it on a mug with Zazzle. This would not only delight a happy
         recipient of the unique gift, but would also support yours humble author of this website :).</p>
       <ul>
         <li>
           Stay tuned for updates on <a href='https://twitter.com/anvaka' class='highlighted'>Twitter.</a>
+        </li>
+        <li>
+          Read the source code on <a href='https://github.com/anvaka/peak-map' class='highlighted'>GitHub.</a>
         </li>
       </ul>
       <p>With passion,<br/> Anvaka</p>
