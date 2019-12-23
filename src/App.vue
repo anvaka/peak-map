@@ -424,11 +424,6 @@ h3 {
   padding: 0 16px;
 }
 
-.file-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-}
 .mapboxgl-ctrl-top-right .mapboxgl-ctrl {
   margin: 0;
 }
@@ -450,15 +445,6 @@ h3 {
   }
 }
 
-.align-center {
-  text-align: center;
-}
-
-.left-right-padded {
-  padding-left: 12px;
-  padding-right: 12px;
-}
-
 .padded {
   padding: 12px;
 }
@@ -473,25 +459,10 @@ a {
   color: primary-action-color;
   text-decoration: none;
 }
-.canvas-settings {
-  padding-bottom: 12px;
-}
 .error pre {
   overflow-x: auto;
 }
-.guidelines {
-  position: absolute;
-  border: 2px solid gray;
-  pointer-events: none;
 
-  .label {
-    text-align: center;
-    padding: 2px 10px;
-    background: rgba(255, 255, 255, 0.3);
-    position: absolute;
-    bottom: 0;
-  }
-}
 .loading-container {
   display: flex;
   align-items: center;
@@ -502,20 +473,6 @@ a {
     margin-right: 12px;
     margin-left: 12px;
   }
-}
-.script-presets {
-  display: inline-block;
-}
-.ctx2d {
-  z-index: 3;
-  pointer-events: none;
-}
-.nodisplay {
-  display: none;
-}
-.browse-btn {
-  color: primary-action-color;
-  cursor: pointer;
 }
 .about-line {
   position: fixed
