@@ -87,6 +87,8 @@ function hideHeights() {
 
 function updateHeights() {
   if (!map) return;
+  map.resize();
+
   let heightMapCanvas = document.querySelector(".height-map");
   if (!heightMapCanvas) return;
 
@@ -101,7 +103,6 @@ function updateHeights() {
     heightMapRenderer.cancel();
   }
 
-  map.resize();
 
   heightMapRenderer = createHeightMapRenderer(appState, map, heightMapCanvas);
   heightMapRenderer.render();
