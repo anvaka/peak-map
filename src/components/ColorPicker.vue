@@ -1,7 +1,7 @@
 <template>
 <div class='vue-colorpicker' @click='showPicker = true' v-click-outside='hide' >
   <span class='vue-colorpicker-btn' :style='btnStyle' ref='triggerButton'></span>
-  <div class='vue-colorpicker-panel' v-show='showPicker' :style="{left: panelLeft}">
+  <div class='vue-colorpicker-panel' v-show='showPicker' :style="{left: panelLeft, top: panelTop}">
     <component :is='pickerType' v-model='colors' @input='changeColor'></component>
   </div>
 </div>
@@ -31,7 +31,8 @@ export default {
         a: 1
       },
       colorValue: '#FFFFFF',
-      panelLeft: '0px'
+      panelLeft: '0px',
+      panelTop: '0px'
     }
   },
   computed: {
@@ -66,12 +67,19 @@ export default {
       if (!newVal) return;
 
       const PICKER_WIDTH = 220;
+      const PANEL_HEIGHT = 320;
       let triggerRect = this.$refs.triggerButton.getBoundingClientRect();
-      if (triggerRect.x + PICKER_WIDTH > window.innerWidth) {
-        this.panelLeft = (window.innerWidth - PICKER_WIDTH) + 'px';
-      } else {
-        this.panelLeft = triggerRect.x + 'px';
+      let desiredLeft = triggerRect.x;
+      let desiredTop = triggerRect.bottom;
+      if (triggerRect.y + PANEL_HEIGHT > window.innerHeight) {
+        desiredTop = Math.max(0, window.innerHeight - PANEL_HEIGHT);
+        desiredLeft += 36; // so that the selector button is still visible;
       }
+      if (desiredLeft + PICKER_WIDTH > window.innerWidth) {
+        desiredLeft = Math.max(0, window.innerWidth - PICKER_WIDTH);
+      } 
+      this.panelLeft = desiredLeft + 'px';
+      this.panelTop = desiredTop + 'px';
     }
   },
 
@@ -129,7 +137,7 @@ export default {
   }
 
   .vue-colorpicker-panel {
-    position: absolute;
+    position: fixed;
   }
 }
 </style>

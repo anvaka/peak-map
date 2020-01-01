@@ -18,6 +18,7 @@ require.ensure("@/vueApp.js", () => {
 let map;
 let heightMapRenderer;
 let regionBuilder;
+let progressHandle;
 
 // Let the vue know what to call to start the app.
 appState.init = init;
@@ -56,6 +57,7 @@ function init() {
 }
 
 function hideHeights() {
+  clearTimeout(progressHandle);
   appState.zazzleLink = null;
   let canvas = document.querySelector(".height-map");
   if (canvas) canvas.style.opacity = 0.02;
@@ -79,6 +81,12 @@ function updateMap() {
   if (regionBuilder) {
     regionBuilder.cancel();
   }
+
+  clearTimeout(progressHandle);
+
+  progressHandle = setTimeout(function() {
+    appState.showPrintMessage = true;
+  }, 10000)
 
   if (!appState.shouldDraw) {
     heightMapCanvas.style.display = "none";

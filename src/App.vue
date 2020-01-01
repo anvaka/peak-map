@@ -16,41 +16,7 @@
         <a href="#" class='draw' title='Draw the heightmap chart' @click.prevent='onMainActionClick'>{{mainActionText}}</a>
       </div>
       <div class='settings-form' v-if='settingsOpen'>
-        <div class='row'>
-          <div class='col'>Line density</div>
-          <div class='col'>
-            <input type="range" min="1" max="100" step="1" v-model="lineDensity"> 
-            <input type='number' :step='1' v-model='lineDensity'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='1' max='100'>
-          </div>
-        </div>
-        <div class='row'>
-          <div class='col'>Height scale</div>
-          <div class='col'>
-            <input type='range' min='10' max='800' step='1' v-model='heightScale'> 
-            <input type='number' :step='1' v-model='heightScale'  autocomplete='off' autocorrect='off' autocapitalize="off" spellcheck="false" min='10' max='800'>
-          </div>
-        </div>
-        <div class='row'>
-          <div class='col'>Ocean level</div>
-          <div class='col'>
-            <input type='range' min='-20' max='500' step='1' v-model='oceanLevel'> 
-            <input type='number' :step='1' v-model='oceanLevel' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' max='500' min='-20'>
-          </div>
-        </div>
-        <div class='row'>
-          <div class='col'>Smooth steps</div>
-          <div class='col'>
-            <input type='range' min='1' max='12' step='1' v-model='smoothSteps'> 
-            <input type='number' :step='1' v-model='smoothSteps'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='1' max='12'>
-          </div>
-        </div>
-        <div class='row'>
-          <div class='col'>Overlay opacity</div>
-          <div class='col'>
-            <input type="range" min="1" max="100" step="1" v-model="mapOpacity"> 
-            <input type='number' :step='1' v-model='mapOpacity'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='1' max='100'>
-          </div>
-        </div>
+        <h3>Map settings</h3>
         <div class='row'>
           <div class='col'>Map Angle</div>
           <div class='col'>
@@ -59,28 +25,66 @@
           </div>
         </div>
 
-        <div class='row'>
-          <div class='col'>Line color</div>
-          <div class='col'>
-            <color-picker v-model='lineColor' @change='updateLinesColor'></color-picker>
+        <div v-if='shouldDraw'>
+          <h3>Height map settings</h3>
+          <div class='row'>
+            <div class='col'>Line density</div>
+            <div class='col'>
+              <input type="range" min="1" max="100" step="1" v-model="lineDensity"> 
+              <input type='number' :step='1' v-model='lineDensity'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='1' max='100'>
+            </div>
           </div>
-        </div>
-        <div class='row'>
-          <div class='col'>Line background</div>
-          <div class='col'>
-            <color-picker v-model='lineBackground' @change='updateLinesColor'></color-picker>
+          <div class='row'>
+            <div class='col'>Height scale</div>
+            <div class='col'>
+              <input type='range' min='10' max='800' step='1' v-model='heightScale'> 
+              <input type='number' :step='1' v-model='heightScale'  autocomplete='off' autocorrect='off' autocapitalize="off" spellcheck="false" min='10' max='800'>
+            </div>
           </div>
-        </div>
+          <div class='row'>
+            <div class='col'>Ocean level</div>
+            <div class='col'>
+              <input type='range' min='-20' max='500' step='1' v-model='oceanLevel'> 
+              <input type='number' :step='1' v-model='oceanLevel' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' max='500' min='-20'>
+            </div>
+          </div>
+          <div class='row'>
+            <div class='col'>Smooth steps</div>
+            <div class='col'>
+              <input type='range' min='1' max='12' step='1' v-model='smoothSteps'> 
+              <input type='number' :step='1' v-model='smoothSteps'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='1' max='12'>
+            </div>
+          </div>
+          <div class='row'>
+            <div class='col'>Overlay opacity</div>
+            <div class='col'>
+              <input type="range" min="1" max="100" step="1" v-model="mapOpacity"> 
+              <input type='number' :step='1' v-model='mapOpacity'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='1' max='100'>
+            </div>
+          </div>
+          <div class='row'>
+            <div class='col'>Line stroke</div>
+            <div class='col'>
+              <color-picker v-model='lineColor' @change='updateLinesColor'></color-picker>
+            </div>
+          </div>
+          <div class='row'>
+            <div class='col'>Line fill</div>
+            <div class='col'>
+              <color-picker v-model='lineBackground' @change='updateLinesColor'></color-picker>
+            </div>
+          </div>
 
-        <div class='row'>
-          <div class='col'>Scene color</div>
-          <div class='col'>
-            <color-picker v-model='backgroundColor' @change='updateBackground'></color-picker>
+          <div class='row'>
+            <div class='col'>Background color</div>
+            <div class='col'>
+              <color-picker v-model='backgroundColor' @change='updateBackground'></color-picker>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class='preview-actions' v-if='!settingsOpen && shouldDraw && showPrintMessage && !hidePrintMessageForSession'>
+      <div class='preview-actions' v-if='!settingsOpen && showPrintMessage && !hidePrintMessageForSession'>
           <div v-if='!zazzleLink'>
             <span>Like what you see?</span>
             <a href='#' @click.prevent='previewOrOpen' class='action' :class='{"has-link": zazzleLink}'>
@@ -177,7 +181,6 @@ export default {
     },
     shouldDraw(newValue) {
       if (!newValue) {
-        this.settingsOpen = false;
         this.zazzleLink = null;
         this.error = null;
       }
@@ -205,7 +208,6 @@ export default {
       this.shouldDraw = !this.shouldDraw;
     },
 
-
     updateBackground(x) {
       this.redraw();
     },
@@ -221,13 +223,26 @@ export default {
         return;
       }
 
-      let canvas = this.$refs.heightMap;
-      if (!canvas) {
-        return;
-      }
+      let heightMapCanvas = this.$refs.heightMap;
       appState.generatingPreview = true;
+      let width = map.painter.width;
+      let height = map.painter.height;
+      let blended = document.createElement('canvas');
+      let blendedCtx = blended.getContext('2d');
+      blended.width = width;
+      blended.height = height;
+      const globalAlpha = Number.parseFloat(appState.mapOpacity)/100;
+      if (globalAlpha < 1 || !this.shouldDraw) {
+        map._render();
+        blendedCtx.drawImage(map.getCanvas(), 0, 0)
+      }
 
-      generateZazzleLink(canvas).then(link => {
+      if (globalAlpha > 0 && this.shouldDraw) {
+        blendedCtx.globalAlpha = globalAlpha;
+        blendedCtx.drawImage(heightMapCanvas, 0, 0, heightMapCanvas.width, heightMapCanvas.height, 0, 0, width, height);
+      }
+
+      generateZazzleLink(blended).then(link => {
         appState.zazzleLink = link;
         window.open(link, '_blank');
         recordOpenClick(link);
@@ -400,8 +415,14 @@ h3 {
     flex: 1;
   }
 }
+
 .settings-form {
-  padding: 0 16px;
+  padding: 0 16px 8px 16px;
+  overflow-y: auto;
+  max-height: calc(100vh - 52px);
+  h3 {
+    margin: 8px 0 0 0;
+  }
 }
 
 .mapboxgl-ctrl-top-right .mapboxgl-ctrl {

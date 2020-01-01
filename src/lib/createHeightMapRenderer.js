@@ -7,7 +7,6 @@
  */
 export default function createHeightMapRenderer(appState, regionInfo, canvas) {
   let renderHandle;
-  let progressHandle;
 
   render();
 
@@ -82,7 +81,7 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
 
         lastRow = y + iteratorSettings.step;
         let elapsed = performance.now() - now;
-        if (elapsed > 2000) {
+        if (elapsed > 200) {
           renderHandle = requestAnimationFrame(renderRows);
           return;
         }
@@ -91,9 +90,6 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
       drawPolyLine(lastLine);
 
       appState.renderProgress = null;
-      progressHandle = setTimeout(function() {
-        appState.showPrintMessage = true;
-      }, 5000)
     }
 
     /**
@@ -137,7 +133,6 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
 
   function cancel() {
     cancelAnimationFrame(renderHandle)
-    clearTimeout(progressHandle);
     appState.renderProgress = null;
     appState.showPrintMessage = false;
   }
