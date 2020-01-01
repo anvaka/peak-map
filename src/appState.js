@@ -1,5 +1,6 @@
 // const ratio = 540/230 - mug
 const appState = {
+  angle: 0,
   currentState: 'intro',
   lineDensity: 28,
   smoothSteps: 1,

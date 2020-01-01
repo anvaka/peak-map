@@ -51,20 +51,13 @@
             <input type='number' :step='1' v-model='mapOpacity'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='1' max='100'>
           </div>
         </div>
-        <!-- <div class='row'>
-          <div class='col'>Map width</div>
+        <div class='row'>
+          <div class='col'>Map Angle</div>
           <div class='col'>
-            <input type="range" min="100" max="8192" step="1" v-model="width"> 
-            <input type='number' :step='1' v-model='width'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='100' max='8192'>
+            <input type="range" min="-180" max="180" step="1" v-model="angle"> 
+            <input type='number' :step='1' v-model='angle'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='-180' max='180'>
           </div>
         </div>
-        <div class='row'>
-          <div class='col'>Map height</div>
-          <div class='col'>
-            <input type="range" min="100" max="8192" step="1" v-model="height"> 
-            <input type='number' :step='1' v-model='height'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='100' max='8192'>
-          </div>
-        </div> -->
 
         <div class='row'>
           <div class='col'>Line color</div>
@@ -164,6 +157,9 @@ export default {
   },
 
   watch: {
+    angle() {
+      this.redraw()
+    },
     lineDensity() {
       this.redraw();
     },

@@ -45,6 +45,7 @@ function init() {
   map.on("dragstart", hideHeights);
   map.on("dragend", updateHeights);
   map.on("load", function() {
+    appState.angle = map.getBearing();
     // I was considering using native layers, to fetch the coordinates,
     // but my understanding of mapbox is not deep enough to do it yet.
 
@@ -103,6 +104,10 @@ function updateHeights() {
     heightMapRenderer.cancel();
   }
 
+  let angle = Number.parseFloat(appState.angle);
+  if (map.getBearing() !== angle) {
+    map.setBearing(angle);
+  }
 
   heightMapRenderer = createHeightMapRenderer(appState, map, heightMapCanvas);
   heightMapRenderer.render();
