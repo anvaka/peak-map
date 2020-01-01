@@ -1,5 +1,7 @@
 import { MAPBOX_TOKEN } from "./config";
 
+const apiURL = `https://api.mapbox.com/v4/mapbox.terrain-rgb/zoom/tLong/tLat@2x.pngraw?access_token=${MAPBOX_TOKEN}`;
+
 export function loadImage(url) {
   return new Promise((accept, error) => {
     const img = new Image();
@@ -22,82 +24,190 @@ function getTilesBounds(tiles) {
 
     return bounds;
   }, {
-    minX: Number.POSITIVE_INFINITY,
-    minY: Number.POSITIVE_INFINITY,
-    maxX: Number.NEGATIVE_INFINITY,
-    maxY: Number.NEGATIVE_INFINITY
+    minX: Infinity,
+    minY: Infinity,
+    maxX: -Infinity,
+    maxY: -Infinity
   })
 }
 
-export function getRegionElevation(map, progress) {
+export function getRegionElevation(map, progress, doneCallback) {
   if (!progress) progress = {};
 
   const renderHD = true;
 
   const tileSize = renderHD ? 512 : 256;
-  const hdSuffix = renderHD ? '@2x' : '';
-
   const tileZoom = map.transform.tileZoom;
+  const zoomPower = Math.pow(2, tileZoom);
+
   const coveringTiles = map.transform.coveringTiles({
     minzoom: tileZoom,
     maxzoom: tileZoom,
     tileSize
   });
 
-  let tileBounds = getTilesBounds(coveringTiles);
+  const tileBounds = getTilesBounds(coveringTiles);
 
   const canvas = document.createElement("canvas");
   const width = tileBounds.maxX - tileBounds.minX;
   const height = tileBounds.maxY - tileBounds.minY;
-  if (width > 50 || height > 50) throw new Error('Too many tiles request. How did you do it?');
+  if (width > 50 || height > 50) throw new Error('Too many tiles requested. How did you do it?');
 
-  let canvasWidth = canvas.width = width * tileSize + tileSize;
-  let canvasHeight = canvas.height = height * tileSize + tileSize;
+  canvas.width = width * tileSize + tileSize;
+  canvas.height = height * tileSize + tileSize;
+  const ctx = canvas.getContext('2d');
 
-  const apiURL = `https://api.mapbox.com/v4/mapbox.terrain-rgb/zoom/tLong/tLat${hdSuffix}.pngraw?access_token=${MAPBOX_TOKEN}`;
+  const minX = tileBounds.minX;
+  const minY = tileBounds.minY;
 
-  const work = coveringTiles.map(tile => {
+  progress.total = coveringTiles.length;
+
+  advanceProgress();
+
+  let heightsHandle;
+  let isCancelled = false;
+  const tilesToLoad = coveringTiles.map(toLoadedTile);
+
+  Promise.all(tilesToLoad)
+    .then(computeVisibleHeights)
+    .then(createAPI)
+    .then(api => {
+      if (!isCancelled) {
+        doneCallback(api)
+      }
+    });
+
+  return {
+    cancel() {
+      isCancelled = true;
+      cancelAnimationFrame(heightsHandle);
+    }
+  }
+
+  function createAPI(visibleHeights) {
+    let width = visibleHeights.windowWidth;
+    let data = visibleHeights.allHeights;
+
+    return {
+      getHeightAtPoint,
+      getAllHeightData() {
+        return visibleHeights;
+      }
+    };
+
+    function getHeightAtPoint(x, y) {
+      return data[x + y * width];
+    }
+  }
+
+  function computeVisibleHeights() {
+    const canvasWidth = canvas.width;
+    const data = ctx.getImageData(0, 0, canvasWidth, canvas.height).data;
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    let allHeights = new Float32Array(windowWidth * windowHeight);
+    let done;
+
+    let timeQuota = 16;
+    let minHeight = Infinity;
+    let maxHeight = -Infinity;
+    let rowWithHighestPoint = -1;
+    let lastY = 0;
+    heightsHandle = requestAnimationFrame(collectHeights); // todo let it be cancelled;
+
+    return new Promise((resolve) => { done = resolve });
+
+    function collectHeights() {
+      let startTime = window.performance.now();
+      for (let y = lastY; y < windowHeight; ++y) {
+        for (let x = 0; x < windowWidth; ++x) {
+          const index = y * windowWidth + x;
+          const height = getHeight(x, y);
+          allHeights[index] = height;
+          if (height < minHeight) minHeight = height;
+          if (height > maxHeight) {
+            maxHeight = height;
+            rowWithHighestPoint = y;
+          }
+        }
+        let elapsed = window.performance.now() - startTime;
+        if (elapsed > timeQuota) {
+          if (!isCancelled) heightsHandle = requestAnimationFrame(collectHeights);
+          return;
+        }
+        lastY = y;
+      }
+
+      done({
+        minHeight, maxHeight, 
+        rowWithHighestPoint, 
+        allHeights,
+        windowWidth,
+        windowHeight
+      });
+    }
+
+    function getHeight(x, y) {
+      let lngLat = map.transform.pointLocation({x, y})
+
+      let xTile = lng2tile(lngLat.lng, zoomPower);
+      let xOffset = (xTile - minX) * tileSize;
+      let yTile = lat2tile(lngLat.lat, zoomPower);
+      let yOffset = (yTile - minY) * tileSize;
+      let yC = Math.round(yOffset);
+      let xC = Math.round(xOffset);
+
+      let index = (yC * canvasWidth + xC) * 4;
+      let R = data[index + 0];
+      let G = data[index + 1];
+      let B = data[index + 2];
+
+      return decodeHeight(R, G, B)
+    }
+
+    function decodeHeight(R, G, B) {
+      let height = -10000 + ((R * 256 * 256 + G * 256 + B) * 0.1)
+      if (height < -100) {
+        // Fiji islands data has huge caves, which pushes the entire thing up.
+        // I'm reducing it.
+        height = height / 5000;
+      }
+      return height;
+    }
+  }
+
+  function toLoadedTile(tile) {
+    const request = getRequestForTile(tile);
+
+    return loadImage(request.url)
+      .then(drawTileImage)
+      .catch(drawBlankTile)
+      .finally(advanceProgress);
+
+    function drawTileImage(image) {
+      ctx.drawImage(image, request.x, request.y);
+    }
+
+    function drawBlankTile() {
+      ctx.beginPath();
+      ctx.fillStyle = '#0186a0'; // zero height
+      ctx.fillRect(request.x, request.y, tileSize, tileSize);
+    }
+  }
+
+  function getRequestForTile(tile) {
     const p = tile.canonical;
     const url = apiURL
-      .replace("zoom", p.z)
-      .replace("tLat", p.y)
-      .replace("tLong", p.x);
+      .replace('zoom', p.z)
+      .replace('tLat', p.y)
+      .replace('tLong', p.x);
 
-    let tileInfo = {
+    return {
       url,
       x: tileSize * (p.x - tileBounds.minX), 
       y: tileSize * (p.y - tileBounds.minY)
     }
-    return tileInfo;
-  });
-
-  progress.total = work.length;
-
-  const ctx = canvas.getContext('2d');
-  advanceProgress();
-
-  return Promise.all(work.map(request => {
-    return loadImage(request.url)
-      .then(image => {
-        ctx.drawImage(image, request.x, request.y);
-        advanceProgress();
-      }).catch(e => {
-        ctx.beginPath();
-        ctx.fillStyle = '#0186a0'; // zero height
-        ctx.fillRect(request.x, request.y, tileSize, tileSize);
-        advanceProgress();
-      });
-  })).then(() => {
-    return {
-      canvas,
-      zoomPower: Math.pow(2, tileZoom),
-      tileSize,
-      width: canvasWidth,
-      height: canvasHeight,
-      minX: tileBounds.minX,
-      minY: tileBounds.minY
-    };
-  });
+  }
 
   function advanceProgress() {
     if (progress.completed === undefined) {
@@ -106,6 +216,7 @@ export function getRegionElevation(map, progress) {
     progress.completed = Math.min(progress.total, progress.completed + 1);
     progress.message = `Downloading tiles: ${progress.completed} of ${progress.total}...`
   }
+  
 }
 
 export function lng2tile(l, zoomPower) {

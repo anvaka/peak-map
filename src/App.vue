@@ -134,6 +134,7 @@ export default {
     this.onResize = () => {
       this.width = window.innerWidth;
       this.height = window.innerHeight;
+      window.map.resize();
     }
     window.addEventListener('resize', this.onResize, true);
   },
@@ -144,17 +145,17 @@ export default {
 
   computed: {
     mainActionText() {
-      if (!this.shouldDraw) {
-        return 'Draw the height map'
+      if (this.shouldDraw) {
+        return 'Show the original map';
       }
-
-      return 'Show the original map';
+      return 'Draw the height map'
     }
   },
 
   watch: {
-    angle() {
-      this.redraw()
+    angle(newValue) {
+      let angle = Number.parseFloat(newValue);
+      map.setBearing(angle);
     },
     lineDensity() {
       this.redraw();
@@ -180,16 +181,13 @@ export default {
         this.zazzleLink = null;
         this.error = null;
       }
-      this.redraw();
+      this.updateMap();
     },
-    settingsOpen(newValue) {
-      if (newValue) {
-        this.redraw();
-      }
-    },
+
     width() {
       updateSizes(this.$refs);
     },
+
     height() {
       updateSizes(this.$refs);
     }
@@ -245,17 +243,13 @@ export default {
 function updateSizes(refs) {
   let dimensions = getCanvasDimensions();
   if (refs.map) {
-    if (dimensions.trueWidth/dimensions.width !== 1) {
-      refs.map.style.transform = 'scale(' + dimensions.trueWidth/dimensions.width + ')';
-      refs.map.style.transformOrigin = 'top left';
-    }
     refs.map.style.left = px(dimensions.left);
     refs.map.style.top = px(dimensions.top);
     refs.map.style.width = px(dimensions.width);
     refs.map.style.height = px(dimensions.height);
   }
   setGuideLineSize(refs.heightMap, dimensions);
-  appState.redraw();
+  appState.updateMap();
 }
 
 function setGuideLineSize(el, dimensions) {

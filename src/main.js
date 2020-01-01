@@ -5,6 +5,7 @@ import appState from "./appState";
 import mapboxgl from "mapbox-gl";
 import createHeightMapRenderer from "./lib/createHeightMapRenderer";
 import { MAPBOX_TOKEN } from "./config";
+import { getRegionElevation } from './elevation';
 
 var MapboxGeocoder = require("@mapbox/mapbox-gl-geocoder");
 
@@ -15,12 +16,13 @@ require.ensure("@/vueApp.js", () => {
 
 // Hold a reference to mapboxgl instance.
 let map;
-
 let heightMapRenderer;
+let regionBuilder;
 
 // Let the vue know what to call to start the app.
 appState.init = init;
-appState.redraw = updateHeights;
+appState.redraw = redraw;
+appState.updateMap = updateMap;
 
 function init() {
   mapboxgl.accessToken = MAPBOX_TOKEN;
@@ -40,40 +42,13 @@ function init() {
     "bottom-right"
   );
   map.addControl(new MapboxGeocoder({ accessToken: mapboxgl.accessToken }));
-  map.on("zoomstart", hideHeights);
-  map.on("zoomend", updateHeights);
-  map.on("dragstart", hideHeights);
-  map.on("dragend", updateHeights);
+  map.on('moveend', function() {
+    map.once('idle', updateMap)
+  });
+  map.on("movestart", hideHeights);
   map.on("load", function() {
     appState.angle = map.getBearing();
-    // I was considering using native layers, to fetch the coordinates,
-    // but my understanding of mapbox is not deep enough to do it yet.
-
     // map.showTileBoundaries = true;
-    // map.addSource("dem", {
-    //   type: "raster-dem",
-    //   url: "mapbox://mapbox.terrain-rgb",
-    //   tileSize: 512
-    // });
-    // map.addLayer(
-    //   {
-    //     id: "hillshading",
-    //     type: "hillshade",
-    //     source: "dem"
-    //   },
-    //   "land"
-    // );
-    // map.addLayer(
-    //   {
-    //     visibility: "none",
-    //     id: "hillshading",
-    //     type: "hillshade",
-    //     source: "dem"
-    //   },
-    //   "water-shadow"
-    // );
-
-    updateHeights();
   });
 
   map.dragRotate.disable();
@@ -86,12 +61,24 @@ function hideHeights() {
   if (canvas) canvas.style.opacity = 0.02;
 }
 
-function updateHeights() {
+function redraw() {
+  if (!heightMapRenderer) return;
+  heightMapRenderer.cancel();
+  heightMapRenderer.render();
+}
+
+function updateMap() {
   if (!map) return;
-  map.resize();
 
   let heightMapCanvas = document.querySelector(".height-map");
   if (!heightMapCanvas) return;
+
+  if (heightMapRenderer) {
+    heightMapRenderer.cancel();
+  }
+  if (regionBuilder) {
+    regionBuilder.cancel();
+  }
 
   if (!appState.shouldDraw) {
     heightMapCanvas.style.display = "none";
@@ -99,16 +86,18 @@ function updateHeights() {
   } else {
     heightMapCanvas.style.display = "";
   }
+  
+  appState.showPrintMessage = false;
+  appState.renderProgress = {
+    message: '',
+    isCancelled: false,
+    completed: false
+  };
 
-  if (heightMapRenderer) {
-    heightMapRenderer.cancel();
+  // This will fetch all heightmap tiles
+  regionBuilder = getRegionElevation(map, appState.renderProgress, showRegionHeights)
+
+  function showRegionHeights(regionInfo) {
+    heightMapRenderer = createHeightMapRenderer(appState, regionInfo, heightMapCanvas);
   }
-
-  let angle = Number.parseFloat(appState.angle);
-  if (map.getBearing() !== angle) {
-    map.setBearing(angle);
-  }
-
-  heightMapRenderer = createHeightMapRenderer(appState, map, heightMapCanvas);
-  heightMapRenderer.render();
 }
