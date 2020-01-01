@@ -148,10 +148,6 @@ export default {
         return 'Draw the height map'
       }
 
-      if (this.settingsOpen) {
-        return 'Close settings'
-      }
-
       return 'Show the original map';
     }
   },
@@ -188,7 +184,6 @@ export default {
     },
     settingsOpen(newValue) {
       if (newValue) {
-        this.shouldDraw = true;
         this.redraw();
       }
     },
@@ -209,11 +204,6 @@ export default {
       }
     },
     onMainActionClick() {
-      if (this.settingsOpen) {
-        this.settingsOpen = false;
-        return;
-      }
-
       this.shouldDraw = !this.shouldDraw;
     },
 
