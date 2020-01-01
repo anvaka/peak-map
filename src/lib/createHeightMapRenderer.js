@@ -2,7 +2,7 @@
  * This is the core component of the website which renders lines on the overlay
  * layer
  */
-import { getRegionElevation } from '../elevation';
+import { getRegionElevation, lat2tile, lng2tile } from '../elevation';
 
 
 /**
@@ -30,7 +30,6 @@ export default function createHeightMapRenderer(appState, map, canvas) {
 
   function render() {
     // let's figure out the area where lines need to be rendered:
-    const bounds = map.getBounds();
     const zoom = Math.floor(map.getZoom(zoom));
     appState.showPrintMessage = false;
     appState.renderProgress = {
@@ -40,9 +39,7 @@ export default function createHeightMapRenderer(appState, map, canvas) {
     };
 
     // This will fetch all heightmap tiles
-    getRegionElevation(
-      bounds.getNorthEast(), bounds.getSouthWest(), zoom, appState.renderProgress
-    ).then(drawRegion);
+    getRegionElevation(map, appState.renderProgress).then(drawRegion);
 
     function drawRegion(regionInfo) {
       if (isCancelled) return;
@@ -51,8 +48,7 @@ export default function createHeightMapRenderer(appState, map, canvas) {
       appState.renderProgress.message = 'Rendering...'
 
       const oceanLevel = Number.parseFloat(appState.oceanLevel);
-      let resHeight = canvas.height;
-      let resWidth = canvas.width;
+
       let smoothSteps = parseFloat(appState.smoothSteps);
 
       canvas.style.opacity = appState.mapOpacity/100;
@@ -61,7 +57,9 @@ export default function createHeightMapRenderer(appState, map, canvas) {
       let lineStroke = getColor(appState.lineColor);
       let lineFill = getColor(appState.lineBackground);
 
-      let rowCount = Math.round(resHeight * appState.lineDensity/100);
+      let resHeight = window.innerHeight;
+      let resWidth = window.innerWidth;
+      let rowCount = Math.round(resHeight * appState.lineDensity/100); 
       let scale = appState.heightScale;
 
       // since tiles can be partially overlapped, we use our own iterator
@@ -89,13 +87,13 @@ export default function createHeightMapRenderer(appState, map, canvas) {
       function renderRows() {
         let now = performance.now();
 
-        for (let row = lastRow; row < iteratorSettings.stop; row += iteratorSettings.step) {
+        for (let y = lastRow; y < iteratorSettings.stop; y += iteratorSettings.step) {
           drawPolyLine(lastLine);
           lastLine = [];
 
-          for (let x = 0; x < resWidth; ++x) {
-            let height = regionIterator.getHeight(row/resHeight, x/resWidth);
-            let fY = row - Math.floor(scale * (height - minH) / heightRange);
+          for (let x = 0; x < window.innerWidth; ++x) {
+            let height = regionIterator.getHeight(x, y);
+            let fY = y - Math.floor(scale * (height - minH) / heightRange);
 
             if (height <= oceanLevel) {
               drawPolyLine(lastLine);
@@ -105,7 +103,7 @@ export default function createHeightMapRenderer(appState, map, canvas) {
             }
           }
 
-          lastRow = row + iteratorSettings.step;
+          lastRow = y + iteratorSettings.step;
           let elapsed = performance.now() - now;
           if (elapsed > 2000) {
             renderHandle = requestAnimationFrame(renderRows);
@@ -211,11 +209,9 @@ export default function createHeightMapRenderer(appState, map, canvas) {
    */
   function createRegionIterator(regionInfo) {
     const elevationCanvas = regionInfo.canvas;
-    const {left, top, right, bottom} = regionInfo;
-    const width = elevationCanvas.width;
-    let data = elevationCanvas.getContext('2d')
-      .getImageData(0, 0, elevationCanvas.width, elevationCanvas.height)
-      .data;
+    const {width, height, tileSize, zoomPower, minX, minY} = regionInfo;
+    let elevationContext = elevationCanvas.getContext('2d');
+    let data = elevationContext.getImageData(0, 0, width, height).data;
 
     return {
       getMinMaxHeight,
@@ -223,15 +219,22 @@ export default function createHeightMapRenderer(appState, map, canvas) {
       getHeight
     }
 
-    function getHeight(row, col) {
-      let x = Math.round(left + col * (right - left));
-      let y = Math.round(top + row * (bottom - top));
+    function getHeight(x, y) {
+        let lngLat = map.transform.pointLocation({x, y})
 
-      let index = (y * width + x) * 4;
+      let xTile = lng2tile(lngLat.lng, zoomPower);
+      let xOffset = (xTile - minX) * tileSize;
+      let yTile = lat2tile(lngLat.lat, zoomPower);
+      let yOffset = (yTile - minY) * tileSize;
+      let yC = Math.round(yOffset);
+      let xC = Math.round(xOffset);
+
+      let index = (yC * width + xC) * 4;
       let R = data[index + 0];
       let G = data[index + 1];
       let B = data[index + 2];
-      return decodeHeight(R, G, B);
+
+      return decodeHeight(R, G, B)
     }
 
     function decodeHeight(R, G, B) {
@@ -248,13 +251,9 @@ export default function createHeightMapRenderer(appState, map, canvas) {
       let minH = Number.POSITIVE_INFINITY;
       let maxH = Number.NEGATIVE_INFINITY;
       let maxRow = -1;
-      for (let x = left; x < right; ++x) {
-        for (let y = top; y < bottom; ++y) {
-          let index = (y * width + x) * 4;
-          let R = data[index + 0];
-          let G = data[index + 1];
-          let B = data[index + 2];
-          let height = decodeHeight(R, G, B)
+      for (let x = 0; x < window.innerWidth; ++x) {
+        for (let y = 0; y < window.innerHeight; ++y) {
+          let height = getHeight(x, y);
           if (height < minH) minH = height;
           if (height > maxH) {
             maxH = height;
@@ -268,11 +267,9 @@ export default function createHeightMapRenderer(appState, map, canvas) {
 
     function getIteratorSettings(rowCount, resHeight, includeRowIndex) {
       let stepSize = Math.round(resHeight / rowCount);
-      let pos = includeRowIndex - stepSize;
-      while (pos - stepSize > 0) pos -= stepSize;
 
       return {
-        start: pos,
+        start: includeRowIndex - Math.floor(includeRowIndex/stepSize) * stepSize,
         step: stepSize,
         stop: resHeight
       }

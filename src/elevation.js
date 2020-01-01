@@ -12,7 +12,24 @@ export function loadImage(url) {
   });
 }
 
-export function getRegionElevation(ne, sw, zoom, progress) {
+function getTilesBounds(tiles) {
+  return tiles.reduce((bounds, tile) => {
+    let p = tile.canonical;
+    if (bounds.minX > p.x) bounds.minX = p.x;
+    if (bounds.minY > p.y) bounds.minY = p.y;
+    if (bounds.maxX < p.x) bounds.maxX = p.x;
+    if (bounds.maxY < p.y) bounds.maxY = p.y;
+
+    return bounds;
+  }, {
+    minX: Number.POSITIVE_INFINITY,
+    minY: Number.POSITIVE_INFINITY,
+    maxX: Number.NEGATIVE_INFINITY,
+    maxY: Number.NEGATIVE_INFINITY
+  })
+}
+
+export function getRegionElevation(map, progress) {
   if (!progress) progress = {};
 
   const renderHD = true;
@@ -20,73 +37,39 @@ export function getRegionElevation(ne, sw, zoom, progress) {
   const tileSize = renderHD ? 512 : 256;
   const hdSuffix = renderHD ? '@2x' : '';
 
-  // these are precise coordinates of the visible area (they are not integers):
-  let startTileLat = lat2tile(ne.lat, zoom);
-  let startTileLng = long2tile(sw.lng, zoom);
-  let endTileLng = long2tile(ne.lng, zoom);
-  let endTileLat = lat2tile(sw.lat, zoom);
+  const tileZoom = map.transform.tileZoom;
+  const coveringTiles = map.transform.coveringTiles({
+    minzoom: tileZoom,
+    maxzoom: tileZoom,
+    tileSize
+  });
 
-  // Map can cover tiles partially. We need to know offsets, so that we align
-  // rendered height map with partially covered height tiles.
-  let startXOffset = Math.round((startTileLng - Math.floor(startTileLng)) * tileSize);
-  let startYOffset = Math.round((startTileLat - Math.floor(startTileLat)) * tileSize);
-  let endXOffset = Math.round((Math.ceil(endTileLng) - endTileLng) * tileSize);
-  let endYOffset = Math.round((Math.ceil(endTileLat) - endTileLat) * tileSize);
-
-
-  // Now that we know offsets, let's convert them to integer tile query:
-  startTileLat = Math.floor(startTileLat);
-  startTileLng = Math.floor(startTileLng);
-  endTileLat = Math.floor(endTileLat);
-  endTileLng = Math.floor(endTileLng);
-
-  if (startTileLng > endTileLng) {
-    let t = startTileLng;
-    startTileLng = endTileLng;
-    endTileLng = t;
-  }
-  if (startTileLat > endTileLat) {
-    let t = startTileLat;
-    startTileLat = endTileLat;
-    endTileLat = t;
-  }
+  let tileBounds = getTilesBounds(coveringTiles);
 
   const canvas = document.createElement("canvas");
-  const width = endTileLng - startTileLng + 1;
-  const height = endTileLat - startTileLat + 1;
+  const width = tileBounds.maxX - tileBounds.minX;
+  const height = tileBounds.maxY - tileBounds.minY;
   if (width > 50 || height > 50) throw new Error('Too many tiles request. How did you do it?');
-  canvas.width = width * tileSize;
-  canvas.height = height * tileSize;
-  let work = [];
+
+  let canvasWidth = canvas.width = width * tileSize + tileSize;
+  let canvasHeight = canvas.height = height * tileSize + tileSize;
 
   const apiURL = `https://api.mapbox.com/v4/mapbox.terrain-rgb/zoom/tLong/tLat${hdSuffix}.pngraw?access_token=${MAPBOX_TOKEN}`;
-  for (let x = 0; x < width; x++) {
-    let _tLong = startTileLng + x;
 
-    let startLng = tile2long(_tLong, zoom);
-    if (startLng < -180) {
-      startLng = 360 + startLng;
-      _tLong = Math.floor(long2tile(startLng, zoom));
-    } else if (startLng >= 180) {
-      startLng = startLng - 360;
-      _tLong = Math.floor(long2tile(startLng, zoom));
+  const work = coveringTiles.map(tile => {
+    const p = tile.canonical;
+    const url = apiURL
+      .replace("zoom", p.z)
+      .replace("tLat", p.y)
+      .replace("tLong", p.x);
+
+    let tileInfo = {
+      url,
+      x: tileSize * (p.x - tileBounds.minX), 
+      y: tileSize * (p.y - tileBounds.minY)
     }
-
-    for (let y = 0; y < height; y++) {
-      let _tLat = startTileLat + y;
-
-      const url = apiURL
-        .replace("zoom", zoom)
-        .replace("tLat", _tLat)
-        .replace("tLong", _tLong);
-
-        work.push({
-          url: url,
-          x: x * tileSize,
-          y: y * tileSize
-        })
-    }
-  }
+    return tileInfo;
+  });
 
   progress.total = work.length;
 
@@ -107,10 +90,12 @@ export function getRegionElevation(ne, sw, zoom, progress) {
   })).then(() => {
     return {
       canvas,
-      left: startXOffset,
-      top: startYOffset, 
-      right: canvas.width - endXOffset,
-      bottom: canvas.height - endYOffset
+      zoomPower: Math.pow(2, tileZoom),
+      tileSize,
+      width: canvasWidth,
+      height: canvasHeight,
+      minX: tileBounds.minX,
+      minY: tileBounds.minY
     };
   });
 
@@ -123,23 +108,20 @@ export function getRegionElevation(ne, sw, zoom, progress) {
   }
 }
 
-export function long2tile(l, zoom) {
-  let result = ((l + 180) / 360) * Math.pow(2, zoom);
+export function lng2tile(l, zoomPower) {
+  let result = ((l + 180) / 360) * zoomPower;
   return result;
 }
 
-export function lat2tile(l, zoom) {
+export function lat2tile(l, zoomPower) {
+  let angle = l * Math.PI / 180;
   return (
-    ((1 -
-      Math.log(
-        Math.tan((l * Math.PI) / 180) + 1 / Math.cos((l * Math.PI) / 180)
-      ) /
+    ((1 - Math.log( Math.tan(angle) + 1 / Math.cos(angle)) /
         Math.PI) /
-      2) *
-    Math.pow(2, zoom)
+      2) * zoomPower 
   );
 }
 
-export function tile2long(x, zoom) {
-  return (x / Math.pow(2, zoom)) * 360 - 180;
+export function tile2long(x, zoomPower) {
+  return (x / zoomPower) * 360 - 180;
 }
