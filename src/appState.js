@@ -22,13 +22,14 @@ const appState = {
   height: window.innerHeight,
 
   backgroundColor: {
-    r: 255, g: 255, b: 255, a: 1
+    r: 0xF7, g: 0xF2, b: 0xE8, a: 1
   },
   lineBackground: {
-    r: 255, g: 255, b: 255, a: 1
+    // r: 255, g: 255, b: 255, a: 1
+    r: 0xF7, g: 0xF2, b: 0xE8, a: 1
   },
   lineColor: {
-    r: 22, g: 22, b: 22, a: 0.85
+    r: 22, g: 22, b: 22, a: 1.0
   },
 };
 

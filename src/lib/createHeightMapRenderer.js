@@ -126,6 +126,7 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
 
     function clearScene() {
       ctx.beginPath();
+      ctx.clearRect(0, 0, resWidth, resHeight);
       ctx.fillStyle = getColor(appState.backgroundColor);
       ctx.fillRect(0, 0, resWidth, resHeight);
     }
