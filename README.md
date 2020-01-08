@@ -1,7 +1,7 @@
 # Peak map
 
 [This website](https://anvaka.github.io/peak-map) allows you to visualize elevation of any area on the map with 
-filled area charts (also known as a `joy plot`):
+filled area charts (also known as a `ridgeline`):
 
 ![quick demo](images/quick_demo.gif)
 
@@ -16,3 +16,7 @@ The rendering of the lines is done on canvas overlay, [using regular 2D canvas c
 You can print the final map onto a mug if you like the result:
 
 ![demo](images/zazzle_mug.png)
+
+To do this, draw the heightmap, close the settings window, and click on the small fly-out menu.
+
+See the video demo here: https://twitter.com/anvaka/status/1207352229885181952
