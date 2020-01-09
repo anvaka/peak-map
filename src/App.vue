@@ -13,7 +13,8 @@
               <circle cx="16" cy="16" r="4" />
           </svg>
         </a>
-        <a href="#" class='draw' title='Draw the heightmap chart' @click.prevent='onMainActionClick'>{{mainActionText}}</a>
+        <a href="#" class='draw peaks' title='Draw the heightmap chart' @click.prevent='onMainActionClick'>{{mainActionText}}</a>
+        <a href="#" class='draw' title='Print on a mug' @click.prevent='previewOrOpen'>Print a mug</a>
       </div>
       <div class='settings-form' v-if='settingsOpen'>
         <h3>Map settings</h3>
@@ -26,7 +27,7 @@
         </div>
 
         <div v-if='shouldDraw'>
-          <h3>Height map settings</h3>
+          <h3>Peaks settings</h3>
           <div class='row'>
             <div class='col'>Line density</div>
             <div class='col'>
@@ -82,15 +83,13 @@
             </div>
           </div>
         </div>
+
+        <div class='close-link'>
+          <a href="#" @click.prevent='settingsOpen = false'>close settings</a>
+        </div>
       </div>
 
-      <div class='preview-actions' v-if='!settingsOpen && showPrintMessage && !hidePrintMessageForSession'>
-          <div v-if='!zazzleLink'>
-            <span>Like what you see?</span>
-            <a href='#' @click.prevent='previewOrOpen' class='action' :class='{"has-link": zazzleLink}'>
-              Print it on a mug!
-            </a>
-          </div>
+      <div class='preview-actions'>
           <div v-if='zazzleLink' class='padded popup-help'>
             If your browser has blocked the new window, please <a :href='zazzleLink' target='_blank'>click here</a>
             to open it.
@@ -98,7 +97,6 @@
           <div v-if='generatingPreview' class='loading-container'>
             <loading></loading> Generating preview url...
           </div>
-          <a href="#" @click.prevent='handleHideClick' class='hide-print-message'>x</a>
       </div>
       <div class='error padded' v-if='error'>
         <h5>Error occurred:</h5>
@@ -150,9 +148,9 @@ export default {
   computed: {
     mainActionText() {
       if (this.shouldDraw) {
-        return 'Show the original map';
+        return 'Draw original map';
       }
-      return 'Draw the height map'
+      return 'Draw peaks'
     }
   },
 
@@ -196,14 +194,6 @@ export default {
     }
   },
   methods: {
-    handleHideClick() {
-      if (this.zazzleLink) {
-        this.showPrintMessage = false;
-        this.zazzleLink = null;
-      } else {
-        this.hidePrintMessageForSession = true
-      }
-    },
     onMainActionClick() {
       this.shouldDraw = !this.shouldDraw;
     },
@@ -377,6 +367,10 @@ h3 {
   pointer-events: none;
   transition: opacity 100ms ease-in-out;
 }
+.close-link {
+  font-size: 10px;
+  text-align: right;
+}
 
 .col {
     align-items: center;
@@ -411,8 +405,8 @@ h3 {
     }
   }
   .draw {
-    margin: 0 16px;
     flex: 1;
+    justify-content: center;
   }
 }
 
@@ -439,7 +433,6 @@ h3 {
   font-size: 14px;
   align-items: center;
   display: flex;
-  margin: 4px 16px;
 
   .popup-help {
     text-align: center;
@@ -515,6 +508,9 @@ a {
   background: rgba(255, 255, 255,.22);
   box-shadow: -1px 1px 4px rgba(134, 132, 132, 0.8)
   user-select: none;
+}
+.peaks {
+  border-right: 1px solid border-color;
 }
 
 @media (max-width: small-screen) {

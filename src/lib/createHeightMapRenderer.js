@@ -135,7 +135,6 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
   function cancel() {
     cancelAnimationFrame(renderHandle)
     appState.renderProgress = null;
-    appState.showPrintMessage = false;
   }
 
   /**
