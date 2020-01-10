@@ -2,6 +2,7 @@ const appState = {
   angle: 0,
   currentState: 'intro',
   lineDensity: 28,
+  lineWidth: 1,
   smoothSteps: 1,
   mapOpacity: 100,
   heightScale: 42,

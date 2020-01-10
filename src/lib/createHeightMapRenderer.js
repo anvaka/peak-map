@@ -33,6 +33,7 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
     let ctx = canvas.getContext('2d');
     let lineStroke = getColor(appState.lineColor);
     let lineFill = getColor(appState.lineBackground);
+    let lineWidth = Number.parseFloat(appState.lineWidth);
 
     let resHeight = window.innerHeight;
     let resWidth = window.innerWidth;
@@ -117,6 +118,7 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
 
       ctx.beginPath();
       ctx.strokeStyle = lineStroke;
+      ctx.lineWidth = lineWidth;
       ctx.moveTo(points[0], points[1]);
       for (let i = 2; i < points.length; i += 2) {
         ctx.lineTo(points[i], points[i + 1]);

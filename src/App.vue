@@ -57,6 +57,13 @@
             </div>
           </div>
           <div class='row'>
+            <div class='col'>Line width</div>
+            <div class='col'>
+              <input type='range' min='0.1' max='5' step='0.1' v-model='lineWidth'> 
+              <input type='number' :step='0.1' v-model='lineWidth'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='0.1' max='5'>
+            </div>
+          </div>
+          <div class='row'>
             <div class='col'>Overlay opacity</div>
             <div class='col'>
               <input type="range" min="1" max="100" step="1" v-model="mapOpacity"> 
@@ -171,6 +178,9 @@ export default {
     smoothSteps() {
       this.redraw();
     },
+    lineWidth() {
+      this.redraw();
+    },
     mapOpacity(newValue) {
       let heightMap = this.$refs.heightMap;
       if (heightMap) {
@@ -272,7 +282,6 @@ function px(x) {
 }
 
 function getCanvasDimensions() {
-
   return {
     width: appState.width,
     height: appState.height,
@@ -280,47 +289,6 @@ function getCanvasDimensions() {
     top: 0,
     trueWidth: window.innerWidth,
     trueHeight: window.innerHeight
-  };
-  let {innerWidth: w, innerHeight: h} = window;
-  let trueWidth = w;
-  let desiredRatio = 540/230; // mug ratio on zazzle. TODO: Customize for other products.
-  let guideLineWidth = trueWidth;
-  if (guideLineWidth < 1280) {
-    guideLineWidth = 1280;
-  }
-
-  let guidelineHeight = guideLineWidth / desiredRatio;
-  let trueHeight = trueWidth / desiredRatio;
-
-  let left = 0;
-
-  if (trueHeight > h) {
-    trueHeight = h;
-    trueWidth = trueHeight * desiredRatio;
-    guidelineHeight = Math.max(h, 768);
-    guideLineWidth = guidelineHeight * desiredRatio;
-    // guidelineHeight = h;
-    // guideLineWidth = guidelineHeight * desiredRatio;
-    left = (w - trueWidth) / 2;
-  }
-
-  let top = (h - trueHeight)/2;
-
-  return {
-    width: window.innerWidth,
-    height: window.innerHeight,
-    left: 0,
-    top: 0,
-    trueWidth: window.innerWidth,
-    trueHeight: window.innerHeight
-  };
-  return {
-    width: guideLineWidth,
-    height: guidelineHeight,
-    left: left,
-    top: top,
-    trueWidth,
-    trueHeight
   };
 }
 
