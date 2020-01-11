@@ -125,7 +125,6 @@ export default {
 .vue-colorpicker {
   display: inline-block;
   box-sizing: border-box;
-  padding: 6px;
   font-size: 0;
   cursor: pointer;
   &-btn {

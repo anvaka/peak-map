@@ -26,6 +26,10 @@
           </div>
         </div>
 
+        <div v-if='!shouldDraw' style="font-weight: normal">
+          <a href="#" class='small' title='Draw peaks' @click.prevent='onMainActionClick'>Draw peaks</a> to see more settings
+        </div>
+
         <div v-if='shouldDraw'>
           <h3>Peaks settings</h3>
           <div class='row'>
@@ -71,22 +75,22 @@
             </div>
           </div>
           <div class='row'>
-            <div class='col'>Line stroke</div>
-            <div class='col'>
-              <color-picker v-model='lineColor' @change='updateLinesColor'></color-picker>
-            </div>
-          </div>
-          <div class='row'>
-            <div class='col'>Line fill</div>
-            <div class='col'>
-              <color-picker v-model='lineBackground' @change='updateLinesColor'></color-picker>
-            </div>
-          </div>
+            <div class='col'>Colors</div>
+            <div class='col colors'>
+              <div class='color-container'>
+                <color-picker v-model='lineColor' @change='updateLinesColor'></color-picker>
+                <div class='color-label'>line stroke</div>
+              </div>
 
-          <div class='row'>
-            <div class='col'>Background color</div>
-            <div class='col'>
-              <color-picker v-model='backgroundColor' @change='updateBackground'></color-picker>
+              <div class='color-container'>
+                <color-picker v-model='lineBackground' @change='updateLinesColor'></color-picker>
+                <div class='color-label'>line fill</div>
+              </div>
+              <div class='color-container'>
+                <color-picker v-model='backgroundColor' @change='updateBackground'></color-picker>
+                <div class='color-label'>background</div>
+              </div>
+
             </div>
           </div>
         </div>
@@ -336,6 +340,7 @@ h3 {
   transition: opacity 100ms ease-in-out;
 }
 .close-link {
+  margin-top: 8px;
   font-size: 10px;
   text-align: right;
 }
@@ -352,7 +357,22 @@ h3 {
   margin-top: 4px;
   display: flex;
   flex-direction: row;
-  height: 32px;
+  min-height: 32px;
+}
+
+.colors {
+    display: flex;
+    flex-direction: row;
+
+  .color-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 64px;
+  }
+  .color-label {
+    font-size: 12px;
+  }
 }
 
 .control-panel {
