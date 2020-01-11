@@ -1,17 +1,24 @@
 import { MAPBOX_TOKEN } from "./config";
 
 const apiURL = `https://api.mapbox.com/v4/mapbox.terrain-rgb/zoom/tLong/tLat@2x.pngraw?access_token=${MAPBOX_TOKEN}`;
+let imageCache = new Map();
 
 export function loadImage(url) {
-  return new Promise((accept, error) => {
-    const img = new Image();
-    img.onload = () => {
-      accept(img);
-    };
-    img.onerror = error;
-    img.crossOrigin = "anonymous";
-    img.src = url;
-  });
+  let cachedImage = imageCache.get(url);
+  if (!cachedImage) {
+    cachedImage = new Promise((resolve, error) => {
+      const img = new Image();
+      img.onload = () => {
+        resolve(img);
+      };
+      img.onerror = error;
+      img.crossOrigin = "anonymous";
+      img.src = url;
+    });
+    imageCache.set(url, cachedImage);
+  }
+
+  return cachedImage;
 }
 
 function getTilesBounds(tiles) {
