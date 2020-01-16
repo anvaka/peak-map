@@ -1,3 +1,5 @@
+import C2S from 'canvas2svg';
+
 /**
  * This is the core component of the website which renders lines on the overlay
  * layer
@@ -30,13 +32,33 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
 
     canvas.style.opacity = appState.mapOpacity/100;
 
-    let ctx = canvas.getContext('2d');
     let lineStroke = getColor(appState.lineColor);
     let lineFill = getColor(appState.lineBackground);
     let lineWidth = Number.parseFloat(appState.lineWidth);
 
     let resHeight = window.innerHeight;
     let resWidth = window.innerWidth;
+
+    let canvasCtx = canvas.getContext('2d');
+    let svgCtx = new C2S(resWidth, resHeight);
+    appState.svgContext = svgCtx;
+
+    // A proxy that calls methods on both the actual canvas context
+    // AND the svg canvas context.
+    let ctx = new Proxy(canvasCtx, {
+      get: function(obj, prop) {
+        return (...args) => {
+          svgCtx[prop](...args);
+          return obj[prop](...args);
+        };
+      },
+      set: function(obj, prop, value) {
+        svgCtx[prop] = value;
+        obj[prop] = value;
+        return true;
+      }
+    });
+
     let rowCount = Math.round(resHeight * appState.lineDensity/100); 
     let scale = appState.heightScale;
 
@@ -94,13 +116,22 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
     }
 
     /**
+     * Round a number to 2 decimal places
+     */
+    function round2(num) {
+      return Math.floor(num * 100) / 100;
+    }
+
+    /**
      * Draws filled polyline.
      */
     function drawPolyLine(points) {
       if (points.length < 3) return;
 
       let smoothRange = getSmoothRange(points, smoothSteps);
-      points = smoothRange.points;
+      // Round points to two decimal places to avoid producing
+      // unecessarily huge SVG files.
+      points = smoothRange.points.map(round2);
 
       // If line's height is greater than 2 pixels, let's fill it:
       if (smoothRange.max - smoothRange.min > 2) {

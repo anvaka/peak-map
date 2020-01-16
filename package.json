@@ -12,6 +12,8 @@
   "dependencies": {
     "@mapbox/mapbox-gl-geocoder": "^2.3.0",
     "@mapbox/tilebelt": "^1.0.1",
+    "canvas2svg": "^1.0.16",
+    "js-file-download": "^0.4.9",
     "mapbox-gl": "^1.6.0",
     "tinycolor2": "^1.4.1",
     "vue": "^2.5.2",

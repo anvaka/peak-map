@@ -93,6 +93,9 @@
 
             </div>
           </div>
+          <div class='row'>
+            <a href="#" title='Download SVG' @click.prevent='downloadSVG'>Download SVG</a>
+          </div>
         </div>
 
         <div class='close-link'>
@@ -130,6 +133,7 @@ import ColorPicker from './components/ColorPicker';
 import Loading from './components/Loading';
 import About from './components/About';
 import generateZazzleLink from './lib/getZazzleLink';
+import fileDownload from 'js-file-download';
 
 export default {
   name: 'App',
@@ -218,6 +222,11 @@ export default {
 
     updateLinesColor(x) {
       this.redraw();
+    },
+
+    downloadSVG() {
+      const svg = appState.svgContext.getSerializedSvg();
+      fileDownload(svg, 'lines.svg');
     },
 
     previewOrOpen() {

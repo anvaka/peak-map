@@ -10,6 +10,7 @@ const appState = {
   aboutVisible: false,
   error: null,
   zazzleLink: null,
+  svgContext: null,
   generatingPreview: false,
   settingsOpen: false,
   shouldDraw: false,
