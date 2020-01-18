@@ -95,7 +95,8 @@
           </div>
         </div>
 
-        <div class='close-link'>
+        <div class='close-link' :class="{'map-visible': shouldDraw}">
+          <a v-if='shouldDraw' href='#' @click.prevent='doExportToSVG'>export to svg</a>
           <a href="#" @click.prevent='settingsOpen = false'>close settings</a>
         </div>
       </div>
@@ -218,6 +219,18 @@ export default {
 
     updateLinesColor(x) {
       this.redraw();
+    },
+
+    doExportToSVG() {
+      let string = appState.exportToSVG();
+      if (!string) return;
+      let blob = new Blob([string], {type: "text/xml"});
+      let url = window.URL.createObjectURL(blob);
+      let a = document.createElement("a");
+      a.href = url;
+      a.download = 'ridge-lines.svg'
+      a.click();
+      window.URL.revokeObjectURL(url);
     },
 
     previewOrOpen() {
@@ -343,6 +356,11 @@ h3 {
   margin-top: 8px;
   font-size: 10px;
   text-align: right;
+}
+
+.close-link.map-visible {
+  display: flex;
+  justify-content: space-between;
 }
 
 .col {

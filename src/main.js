@@ -22,6 +22,7 @@ let regionBuilder;
 appState.init = init;
 appState.redraw = redraw;
 appState.updateMap = updateMap;
+appState.exportToSVG = exportToSVG;
 
 function init() {
   mapboxgl.accessToken = MAPBOX_TOKEN;
@@ -64,6 +65,11 @@ function redraw() {
   if (!heightMapRenderer) return;
   heightMapRenderer.cancel();
   heightMapRenderer.render();
+}
+
+function exportToSVG() {
+  if (!heightMapRenderer) return;
+  return heightMapRenderer.render(true);
 }
 
 function updateMap() {

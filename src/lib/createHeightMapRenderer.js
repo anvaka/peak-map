@@ -1,3 +1,5 @@
+import createSVGContext from './createSVGContext';
+
 /**
  * This is the core component of the website which renders lines on the overlay
  * layer
@@ -18,7 +20,7 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
     render
   }
 
-  function render() {
+  function render(toSVG) {
     // let's set everything up to match our application state:
     if (appState.renderProgress) {
       appState.renderProgress.message = 'Rendering...'
@@ -52,10 +54,58 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
     let lastLine = [];
     let lastRow = iteratorSettings.start;
 
-    clearScene();
-    renderRows();
+    // When rendered to SVG - count the filled area, so that we can break paths
+    // if they overlap already rendered paths
+    let columnHeights;
+
+    if (toSVG) {
+      // SVG needs hex values, not rgba, also ignore alpha
+      lineStroke = getColor(appState.lineColor, /* useHex = */ true);
+      columnHeights = new Float32Array(window.innerWidth);
+      lastRow = iteratorSettings.stop;
+      // This is going to be our look up structure. Point `(x, y)` is visible
+      // only if its `y` coordinate is smaller than `columnHeight[x]` value.
+      // (we render from bottom to top for svg files)
+      for (let x = 0; x < window.innerWidth; ++x) {
+        columnHeights[x] = window.innerHeight;
+      }
+      return renderSVGRows();
+    } else {
+      clearScene();
+      return renderRows();
+    }
 
     // Public part is over. Below is is just implementation detail
+
+    function renderSVGRows() {
+      let svg = createSVGContext(window.innerWidth, window.innerHeight); // || ctx - they both work here.
+      for (let y = lastRow; y > 0; y -= iteratorSettings.step) {
+        drawSVGLine(lastLine, svg);
+        lastLine = [];
+
+        for (let x = 0; x < window.innerWidth; ++x) {
+          // let lastRenderedColumnHeight = columnHeights[x];
+          let height = regionInfo.getHeightAtPoint(x, y);
+          let fY = y - Math.floor(scale * (height - minHeight) / heightRange);
+          if (height <= oceanLevel) {
+            drawSVGLine(lastLine, svg);
+            lastLine = [];
+          } else {
+            lastLine.push(x, fY);
+          }
+        }
+
+        lastRow = y - iteratorSettings.step;
+      }
+
+      drawSVGLine(lastLine, svg);
+
+      appState.renderProgress = null;
+      if (svg.serialize) {
+        // ctx (used for debugging) doesn't have this method
+        return svg.serialize();
+      }
+    }
 
     /**
      * This renders rows, and stops if allowed time quota is exceeded (making rendering
@@ -64,8 +114,8 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
     function renderRows() {
       let now = performance.now();
 
-      for (let y = lastRow; y < iteratorSettings.stop; y += iteratorSettings.step) {
-        drawPolyLine(lastLine);
+      for (let y = lastRow; y <= iteratorSettings.stop; y += iteratorSettings.step) {
+        drawPolyLine(lastLine, true);
         lastLine = [];
 
         for (let x = 0; x < window.innerWidth; ++x) {
@@ -73,7 +123,7 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
           let fY = y - Math.floor(scale * (height - minHeight) / heightRange);
 
           if (height <= oceanLevel) {
-            drawPolyLine(lastLine);
+            drawPolyLine(lastLine, true);
             lastLine = [];
           } else {
             lastLine.push(x, fY);
@@ -88,9 +138,55 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
         }
       }
 
-      drawPolyLine(lastLine);
+      drawPolyLine(lastLine, true);
 
       appState.renderProgress = null;
+    }
+
+    /**
+     * Draws a polyline, that does not intersect already rendered
+     * lines. Assumption is that we render from bottom to the top.
+     * 
+     * 
+     */
+    function drawSVGLine(points, svg) {
+      if (points.length < 3) return;
+
+      let smoothRange = getSmoothRange(points, smoothSteps);
+      points = smoothRange.points;
+
+      svg.beginPath();
+      svg.strokeStyle = lineStroke;
+      svg.lineWidth = lineWidth;
+      let wasVisible = false;
+      for (let i = 0; i < points.length; i += 2) {
+        let x = points[i];
+        let y = points[i + 1];
+
+        let lastRenderedColumnHeight = columnHeights[x];
+        let isVisible = y <= lastRenderedColumnHeight && y >= 0;
+        if (isVisible) {
+          // This is important bit. We mark the entire area below as "rendered"
+          // so that next `isVisible` check will return false, and we will break the line
+          columnHeights[x] = Math.min(y, lastRenderedColumnHeight)
+          // the path is visible:
+          if (wasVisible) {
+            svg.lineTo(x, y);
+          } else {
+            svg.moveTo(x, y);
+          }
+        } else {
+          // The path is no longer visible
+          if (wasVisible) {
+            // But it was visible before
+            svg.lineTo(x, y < 0 ? 0 : lastRenderedColumnHeight);
+          } else {
+            svg.moveTo(x, y < 0? 0 : lastRenderedColumnHeight);
+          }
+        }
+        wasVisible = isVisible;
+      }
+      svg.stroke();
     }
 
     /**
@@ -180,15 +276,26 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
    */
   function createRegionIterator(rowCount, resHeight, includeRowIndex) {
     let stepSize = Math.round(resHeight / rowCount);
+    let start = includeRowIndex - Math.floor(includeRowIndex/stepSize) * stepSize;
+    let stop = start + stepSize * Math.floor((resHeight - start) / stepSize)
 
     return {
-      start: includeRowIndex - Math.floor(includeRowIndex/stepSize) * stepSize,
+      start,
+      stop,
       step: stepSize,
-      stop: resHeight
     }
   }
 
-  function getColor(color) {
+  function getColor(color, useHex) {
+    if (useHex) {
+      return `#${hex(color.r)}${hex(color.g)}${hex(color.b)}`;
+    }
     return `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`
   }
+}
+
+function hex(x) {
+  if (x === 0) return '00';
+  let hexValue = x.toString(16)
+  return x < 16 ? '0' + hexValue : hexValue;
 }
