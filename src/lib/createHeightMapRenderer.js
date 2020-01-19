@@ -79,12 +79,16 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
 
     function renderSVGRows() {
       let svg = createSVGContext(window.innerWidth, window.innerHeight); // || ctx - they both work here.
+      let row = 0;
+      let width = window.innerWidth;
       for (let y = lastRow; y > 0; y -= iteratorSettings.step) {
         drawSVGLine(lastLine, svg);
         lastLine = [];
+        let isEven = (row % 2) === 0
+        row += 1;
 
-        for (let x = 0; x < window.innerWidth; ++x) {
-          // let lastRenderedColumnHeight = columnHeights[x];
+        for (let i = 0; i < width; i += 1) {
+          let x = isEven ? i : width - 1 - i;
           let height = regionInfo.getHeightAtPoint(x, y);
           let fY = y - Math.floor(scale * (height - minHeight) / heightRange);
           if (height <= oceanLevel) {
