@@ -17,71 +17,24 @@
         <a href="#" class='draw' title='Print on a mug' @click.prevent='previewOrOpen'>Print a mug</a>
       </div>
       <div class='settings-form' v-if='settingsOpen'>
-        <h3>Map settings</h3>
+        <h3>View</h3>
         <div class='row'>
           <div class='col'>Map Angle</div>
-          <div class='col'>
+          <div class='col c-2'>
             <input type="range" min="-180" max="180" step="1" v-model="angle"> 
             <input type='number' :step='1' v-model='angle'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='-180' max='180'>
           </div>
         </div>
 
-        <div v-if='!shouldDraw' style="font-weight: normal">
-          <a href="#" class='small' title='Draw peaks' @click.prevent='onMainActionClick'>Draw peaks</a> to see more settings
-        </div>
 
         <div v-if='shouldDraw'>
-          <h3>Peaks settings</h3>
-          <div class='row'>
-            <div class='col'>Line density</div>
-            <div class='col'>
-              <input type="range" min="1" max="100" step="1" v-model="lineDensity"> 
-              <input type='number' :step='1' v-model='lineDensity'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='1' max='100'>
-            </div>
-          </div>
-          <div class='row'>
-            <div class='col'>Height scale</div>
-            <div class='col'>
-              <input type='range' min='10' max='800' step='1' v-model='heightScale'> 
-              <input type='number' :step='1' v-model='heightScale'  autocomplete='off' autocorrect='off' autocapitalize="off" spellcheck="false" min='10' max='800'>
-            </div>
-          </div>
-          <div class='row'>
-            <div class='col'>Ocean level</div>
-            <div class='col'>
-              <input type='range' min='-20' max='500' step='1' v-model='oceanLevel'> 
-              <input type='number' :step='1' v-model='oceanLevel' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' max='500' min='-20'>
-            </div>
-          </div>
-          <div class='row'>
-            <div class='col'>Smooth steps</div>
-            <div class='col'>
-              <input type='range' min='1' max='12' step='1' v-model='smoothSteps'> 
-              <input type='number' :step='1' v-model='smoothSteps'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='1' max='12'>
-            </div>
-          </div>
-          <div class='row'>
-            <div class='col'>Line width</div>
-            <div class='col'>
-              <input type='range' min='0.1' max='5' step='0.1' v-model='lineWidth'> 
-              <input type='number' :step='0.1' v-model='lineWidth'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='0.1' max='5'>
-            </div>
-          </div>
-          <div class='row'>
-            <div class='col'>Overlay opacity</div>
-            <div class='col'>
-              <input type="range" min="1" max="100" step="1" v-model="mapOpacity"> 
-              <input type='number' :step='1' v-model='mapOpacity'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='1' max='100'>
-            </div>
-          </div>
           <div class='row'>
             <div class='col'>Colors</div>
-            <div class='col colors'>
+            <div class='col colors c-2'>
               <div class='color-container'>
                 <color-picker v-model='lineColor' @change='updateLinesColor'></color-picker>
                 <div class='color-label'>line stroke</div>
               </div>
-
               <div class='color-container'>
                 <color-picker v-model='lineBackground' @change='updateLinesColor'></color-picker>
                 <div class='color-label'>line fill</div>
@@ -90,13 +43,81 @@
                 <color-picker v-model='backgroundColor' @change='updateBackground'></color-picker>
                 <div class='color-label'>background</div>
               </div>
-
             </div>
+          </div>
+          <div class='row'>
+            <div class='col'>Line density</div>
+            <div class='col c-2'>
+              <input type="range" min="1" max="100" step="1" v-model="lineDensity"> 
+              <input type='number' :step='1' v-model='lineDensity'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='1' max='100'>
+            </div>
+          </div>
+          <div class='row'>
+            <div class='col'>Height scale</div>
+            <div class='col c-2'>
+              <input type='range' min='10' max='800' step='1' v-model='heightScale'> 
+              <input type='number' :step='1' v-model='heightScale'  autocomplete='off' autocorrect='off' autocapitalize="off" spellcheck="false" min='10' max='800'>
+            </div>
+          </div>
+          <div class='row'>
+            <div class='col'>Ocean level</div>
+            <div class='col c-2'>
+              <input type='range' min='-20' max='500' step='1' v-model='oceanLevel'> 
+              <input type='number' :step='1' v-model='oceanLevel' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' max='500' min='-20'>
+            </div>
+          </div>
+          <div class='row'>
+            <div class='col'>Smooth steps</div>
+            <div class='col c-2'>
+              <input type='range' min='1' max='12' step='1' v-model='smoothSteps'> 
+              <input type='number' :step='1' v-model='smoothSteps'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='1' max='12'>
+            </div>
+          </div>
+          <div class='row'>
+            <div class='col'>Line width</div>
+            <div class='col c-2'>
+              <input type='range' min='0.1' max='5' step='0.1' v-model='lineWidth'> 
+              <input type='number' :step='0.1' v-model='lineWidth'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='0.1' max='5'>
+            </div>
+          </div>
+          <div class='row'>
+            <div class='col'>Overlay opacity</div>
+            <div class='col c-2'>
+              <input type="range" min="1" max="100" step="1" v-model="mapOpacity"> 
+              <input type='number' :step='1' v-model='mapOpacity'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='1' max='100'>
+            </div>
+          </div>
+          
+
+          <h3>Export</h3>
+          <div class='row'>
+            <a href='#'  @click.capture='doExportToPNG' class='col export'>As an image (.png)</a> 
+            <span class='col c-2'>
+              Save the current screen as a raster image.
+            </span>
+          </div>
+          <div class='row'>
+            <a href='#'  @click.prevent='doExportToSVG' class='col export'>As a vector (.svg)</a> 
+            <span class='col c-2'>
+              Save the current screen as a vector image.
+            </span>
+          </div>
+          <h3>About</h3>
+          <div>
+            <p>This website was created by <a href='https://twitter.com/anvaka' target='_blank'>@anvaka</a>.
+            It shows elevation with ridgelines for anywhere on Earth. 
+            </p>
+            <p>
+            You can find the entire <a href='https://github.com/anvaka/peak-map'>source code here</a>. 
+            If you love this website you can also <a href='https://www.paypal.com/paypalme2/anvakos/3'>buy me a coffee</a>, but you don't have to. I hope you enjoy the website!
+            </p>
           </div>
         </div>
 
         <div class='close-link' :class="{'map-visible': shouldDraw}">
-          <a v-if='shouldDraw' href='#' @click.prevent='doExportToSVG'>export to svg</a>
+          <div v-if='!shouldDraw'>
+            <a href="#" class='small' title='Draw peaks' @click.prevent='onMainActionClick'>Draw peaks</a> to see more settings
+          </div>
           <a href="#" @click.prevent='settingsOpen = false'>close settings</a>
         </div>
       </div>
@@ -233,15 +254,40 @@ export default {
       window.URL.revokeObjectURL(url);
     },
 
+    doExportToPNG() {
+      let printableCanvas = this.getBlendedCanvas();
+      printableCanvas.toBlob(function(blob) {
+        let url = window.URL.createObjectURL(blob);
+        let a = document.createElement("a");
+        a.href = url;
+        a.download = 'ridge-lines.png';
+        a.click();
+        window.URL.revokeObjectURL(url);
+      }, 'image/png')
+    },
+
     previewOrOpen() {
       if (this.zazzleLink) {
         window.open(this.zazzleLink, '_blank');
         recordOpenClick(this.zazzleLink);
         return;
       }
-
-      let heightMapCanvas = this.$refs.heightMap;
       appState.generatingPreview = true;
+      let blended = this.getBlendedCanvas();
+
+      generateZazzleLink(blended).then(link => {
+        appState.zazzleLink = link;
+        window.open(link, '_blank');
+        recordOpenClick(link);
+        appState.generatingPreview = false;
+      }).catch(e => {
+        appState.error = e;
+        appState.generatingPreview = false;
+      });
+    },
+
+    getBlendedCanvas() {
+      let heightMapCanvas = this.$refs.heightMap;
       let width = map.painter.width;
       let height = map.painter.height;
       let blended = document.createElement('canvas');
@@ -259,16 +305,8 @@ export default {
         blendedCtx.drawImage(heightMapCanvas, 0, 0, heightMapCanvas.width, heightMapCanvas.height, 0, 0, width, height);
       }
 
-      generateZazzleLink(blended).then(link => {
-        appState.zazzleLink = link;
-        window.open(link, '_blank');
-        recordOpenClick(link);
-        appState.generatingPreview = false;
-      }).catch(e => {
-        appState.error = e;
-        appState.generatingPreview = false;
-      });
-    },
+      return blended;
+    }
   }
 }
 
@@ -333,13 +371,15 @@ small-screen = 700px;
 }
 
 #app {
-  width: 400px;
+  width: 442px;
   background: white;
   z-index: 4;
   box-shadow: 0 0 20px rgba(0,0,0,.3);
 }
 h3 {
+  font-weight: normal;
   margin: 12px 0;
+  text-align: right;
 }
 .hide-print-message {
   position: absolute;
@@ -355,7 +395,8 @@ h3 {
 .close-link {
   margin-top: 8px;
   font-size: 10px;
-  text-align: right;
+  display: flex;
+  justify-content: space-between;
 }
 
 .close-link.map-visible {
@@ -364,13 +405,26 @@ h3 {
 }
 
 .col {
-    align-items: center;
-    display: flex;
-    flex: 1;
-    select {
-      margin-left: 14px;
-    }
+  align-items: center;
+  display: flex;
+  flex: 1;
+  select {
+    margin-left: 14px;
   }
+
+  input[type="range"] {
+    flex: 1;
+  }
+}
+.col.c-2 {
+  flex: 2
+  margin-left: 4px;
+}
+.col.export {
+  margin-right: 4px;
+  align-items: stretch;
+}
+
 .row {
   margin-top: 4px;
   display: flex;
