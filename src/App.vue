@@ -7,26 +7,12 @@
     </div>
     <div id="app" class='absolute'> 
       <div class='row control-panel'>
-        <a href="#" class='settings' @click.prevent='settingsOpen = !settingsOpen' title='Toggle settings'>
-          <svg  xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="24" height="24" fill="none" stroke="currentcolor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
-              <path d="M13 2 L13 6 11 7 8 4 4 8 7 11 6 13 2 13 2 19 6 19 7 21 4 24 8 28 11 25 13 26 13 30 19 30 19 26 21 25 24 28 28 24 25 21 26 19 30 19 30 13 26 13 25 11 28 8 24 4 21 7 19 6 19 2 Z" />
-              <circle cx="16" cy="16" r="4" />
-          </svg>
+        <a v-if='shouldDraw' href="#" class='draw settings' @click.prevent='settingsOpen = !settingsOpen' title='Toggle settings'>
+          Customize...
         </a>
         <a href="#" class='draw peaks' title='Draw the heightmap chart' @click.prevent='onMainActionClick'>{{mainActionText}}</a>
-        <a href="#" class='draw' title='Print on a mug' @click.prevent='previewOrOpen'>Print a mug</a>
       </div>
       <div class='settings-form' v-if='settingsOpen'>
-        <h3>View</h3>
-        <div class='row'>
-          <div class='col'>Map Angle</div>
-          <div class='col c-2'>
-            <input type="range" min="-180" max="180" step="1" v-model="angle"> 
-            <input type='number' :step='1' v-model='angle'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='-180' max='180'>
-          </div>
-        </div>
-
-
         <div v-if='shouldDraw'>
           <div class='row'>
             <div class='col'>Colors</div>
@@ -87,11 +73,40 @@
               <input type='number' :step='1' v-model='mapOpacity'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='1' max='100'>
             </div>
           </div>
-          
+          <div class='row'>
+            <div class='col'>Map Angle</div>
+            <div class='col c-2'>
+              <input type="range" min="-180" max="180" step="1" v-model="angle"> 
+              <input type='number' :step='1' v-model='angle'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='-180' max='180'>
+            </div>
+          </div>
+
 
           <h3>Export</h3>
+
           <div class='row'>
-            <a href='#'  @click.capture='doExportToPNG' class='col export'>As an image (.png)</a> 
+            <a href="#" class='col export' title='Print on a mug' @click.prevent='previewOrOpen'>Onto a mug</a>
+            <span class='col c-2'>
+              Print what you see onto a mug. Get a unique gift of your favorite place.
+            </span>
+          </div>
+
+          <div class='preview-actions'>
+            <div v-if='zazzleLink' class='padded popup-help'>
+              If your browser has blocked the new window, please <a :href='zazzleLink' target='_blank'>click here</a>
+              to open it.
+            </div>
+            <div v-if='generatingPreview' class='loading-container'>
+              <loading></loading> Generating preview url...
+            </div>
+          </div>
+          <div class='error padded' v-if='error'>
+            <h5>Error occurred:</h5>
+            <pre>{{error}}</pre>
+          </div>
+
+          <div class='row'>
+            <a href='#'  @click.prevent='doExportToPNG' class='col export'>As an image (.png)</a> 
             <span class='col c-2'>
               Save the current screen as a raster image.
             </span>
@@ -114,26 +129,12 @@
           </div>
         </div>
 
-        <div class='close-link' :class="{'map-visible': shouldDraw}">
-          <div v-if='!shouldDraw'>
-            <a href="#" class='small' title='Draw peaks' @click.prevent='onMainActionClick'>Draw peaks</a> to see more settings
-          </div>
-          <a href="#" @click.prevent='settingsOpen = false'>close settings</a>
+        <div v-if='!shouldDraw'>
+          Draw peaks to see more options
         </div>
-      </div>
-
-      <div class='preview-actions'>
-          <div v-if='zazzleLink' class='padded popup-help'>
-            If your browser has blocked the new window, please <a :href='zazzleLink' target='_blank'>click here</a>
-            to open it.
-          </div>
-          <div v-if='generatingPreview' class='loading-container'>
-            <loading></loading> Generating preview url...
-          </div>
-      </div>
-      <div class='error padded' v-if='error'>
-        <h5>Error occurred:</h5>
-        <pre>{{error}}</pre>
+        <div class='close-link' :class="{'map-visible': shouldDraw}">
+          <a href="#" @click.prevent='settingsOpen = false'>close</a>
+        </div>
       </div>
 
     </div>
@@ -183,7 +184,7 @@ export default {
       if (this.shouldDraw) {
         return 'Draw original map';
       }
-      return 'Draw peaks'
+      return 'Click here to draw peaks'
     }
   },
 
@@ -379,7 +380,6 @@ small-screen = 700px;
 h3 {
   font-weight: normal;
   margin: 12px 0;
-  text-align: right;
 }
 .hide-print-message {
   position: absolute;
@@ -458,7 +458,6 @@ h3 {
   }
   a.settings {
     border-right: 1px solid border-color;
-    color: border-color;
     padding: 0 16px;
     &:hover {
       color: primary-action-color;
@@ -471,11 +470,12 @@ h3 {
 }
 
 .settings-form {
-  padding: 0 16px 8px 16px;
+  padding: 8px 16px 8px 16px;
   overflow-y: auto;
   max-height: calc(100vh - 52px);
   h3 {
     margin: 8px 0 0 0;
+    text-align: right;
   }
 }
 
@@ -493,6 +493,7 @@ h3 {
   font-size: 14px;
   align-items: center;
   display: flex;
+  background-color: #e2e2e2
 
   .popup-help {
     text-align: center;
