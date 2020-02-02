@@ -4,7 +4,7 @@ import indexPolygon from "./lib/indexPolygon";
 const apiURL = `https://api.mapbox.com/v4/mapbox.terrain-rgb/zoom/tLong/tLat@2x.pngraw?access_token=${MAPBOX_TOKEN}`;
 let imageCache = new Map();
 
-export function getRegionElevation(map, progress, doneCallback) {
+export default function getRegionElevation(map, progress, doneCallback) {
   if (!progress) progress = {};
 
   const renderHD = true;

@@ -5,7 +5,7 @@ import appState from "./appState";
 import mapboxgl from "mapbox-gl";
 import createHeightMapRenderer from "./lib/createHeightMapRenderer";
 import { MAPBOX_TOKEN } from "./config";
-import { getRegionElevation } from './elevation';
+import getRegionElevation from './getRegionElevation';
 
 var MapboxGeocoder = require("@mapbox/mapbox-gl-geocoder");
 
