@@ -1,4 +1,5 @@
 import { MAPBOX_TOKEN } from "./config";
+import indexPolygon from "./lib/indexPolygon";
 
 const apiURL = `https://api.mapbox.com/v4/mapbox.terrain-rgb/zoom/tLong/tLat@2x.pngraw?access_token=${MAPBOX_TOKEN}`;
 let imageCache = new Map();
@@ -120,16 +121,21 @@ export function getRegionElevation(map, progress, doneCallback) {
     let maxHeight = -Infinity;
     let rowWithHighestPoint = -1;
     let lastY = 0;
+
+    // // https://nominatim.openstreetmap.org/search.php?q=Mont%20Rainier&polygon_geojson=1&format=json
+    // let geoResponse = require('./lib/fakeResponse.json')[0];
+    let insideMask = indexPolygon(/* geoResponse */);
     heightsHandle = requestAnimationFrame(collectHeights); // todo let it be cancelled;
 
     return new Promise((resolve) => { done = resolve });
 
     function collectHeights() {
       let startTime = window.performance.now();
+
       for (let y = lastY; y < windowHeight; ++y) {
         for (let x = 0; x < windowWidth; ++x) {
           const index = y * windowWidth + x;
-          const height = getHeight(x, y);
+          const height = getHeight(x, y, insideMask);
           allHeights[index] = height;
           if (height < minHeight) minHeight = height;
           if (height > maxHeight) {
@@ -154,8 +160,9 @@ export function getRegionElevation(map, progress, doneCallback) {
       });
     }
 
-    function getHeight(x, y) {
+    function getHeight(x, y, insideMask) {
       let lngLat = map.transform.pointLocation({x, y})
+      if (!insideMask([lngLat.lng, lngLat.lat])) return -100;
 
       let xTile = lng2tile(lngLat.lng, zoomPower);
       let xOffset = (xTile - minX) * tileSize;
