@@ -9,6 +9,7 @@ import createSVGContext from './createSVGContext';
  */
 export default function createHeightMapRenderer(appState, regionInfo, canvas) {
   let renderHandle;
+  let trueWindowHeight;
 
   render();
 
@@ -30,14 +31,14 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
 
     let smoothSteps = parseFloat(appState.smoothSteps);
 
-    canvas.style.opacity = appState.mapOpacity/100;
+    canvas.style.opacity = appState.mapOpacity / 100;
 
     let ctx = canvas.getContext('2d');
     let lineStroke = getColor(appState.lineColor);
     let lineFill = getColor(appState.lineBackground);
     let lineWidth = Number.parseFloat(appState.lineWidth);
 
-    let resHeight = window.innerHeight;
+    let resHeight = regionInfo.windowHeight;
     let resWidth = window.innerWidth;
     let rowCount = Math.round(resHeight * appState.lineDensity / 100); 
     let scale = appState.heightScale;
@@ -57,6 +58,7 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
     // When rendered to SVG - count the filled area, so that we can break paths
     // if they overlap already rendered paths
     let columnHeights;
+    trueWindowHeight = window.innerHeight;
 
     if (toSVG) {
       // SVG needs hex values, not rgba, also ignore alpha
@@ -67,7 +69,7 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
       // only if its `y` coordinate is smaller than `columnHeight[x]` value.
       // (we render from bottom to top for svg files)
       for (let x = 0; x < window.innerWidth; ++x) {
-        columnHeights[x] = window.innerHeight;
+        columnHeights[x] = trueWindowHeight; 
       }
       return renderSVGRows();
     } else {
@@ -78,9 +80,11 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
     // Public part is over. Below is is just implementation detail
 
     function renderSVGRows() {
+
       let svg = createSVGContext(window.innerWidth, window.innerHeight); // || ctx - they both work here.
       let row = 0;
       let width = window.innerWidth;
+
       for (let y = lastRow; y > 0; y -= iteratorSettings.step) {
         drawSVGLine(lastLine, svg);
         lastLine = [];
@@ -168,7 +172,7 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
         let y = points[i + 1];
 
         let lastRenderedColumnHeight = columnHeights[x];
-        let isVisible = y <= lastRenderedColumnHeight && y >= 0;
+        let isVisible = y <= lastRenderedColumnHeight && y >= 0 && y < trueWindowHeight;
         if (isVisible) {
           // This is important bit. We mark the entire area below as "rendered"
           // so that next `isVisible` check will return false, and we will break the line

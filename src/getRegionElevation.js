@@ -7,10 +7,7 @@ let imageCache = new Map();
 export default function getRegionElevation(map, progress, doneCallback) {
   if (!progress) progress = {};
 
-  const renderHD = true;
-
-  const tileSize = renderHD ? 512 : 256;
-  const tileZoom = map.transform.tileZoom;
+  const {tileSize, tileZoom} = map.transform;
   const zoomPower = Math.pow(2, tileZoom);
 
   const coveringTiles = map.transform.coveringTiles({
@@ -20,14 +17,22 @@ export default function getRegionElevation(map, progress, doneCallback) {
   });
 
   const tileBounds = getTilesBounds(coveringTiles);
+  const widthInTiles = tileBounds.maxX - tileBounds.minX;
+  const heightInTiles = tileBounds.maxY - tileBounds.minY;
+  if (widthInTiles > 50 || heightInTiles > 50) throw new Error('Too many tiles requested. How did you do it?');
+  let windowHeight = window.innerHeight;
+
+  if (!map.transform.angle && !map.transform.bearing) {
+    // give a little bit of buffer at the bottom if possible
+    let se = map.getBounds().getSouthEast();
+    se.lat = tile2lat(tileBounds.maxY + 1, zoomPower);
+    windowHeight = map.project(se).y;
+  }
 
   const canvas = document.createElement("canvas");
-  const width = tileBounds.maxX - tileBounds.minX;
-  const height = tileBounds.maxY - tileBounds.minY;
-  if (width > 50 || height > 50) throw new Error('Too many tiles requested. How did you do it?');
+  canvas.width = (widthInTiles + 1) * tileSize;
+  canvas.height = (heightInTiles + 1) * tileSize;
 
-  canvas.width = width * tileSize + tileSize;
-  canvas.height = height * tileSize + tileSize;
   const ctx = canvas.getContext('2d');
 
   const minX = tileBounds.minX;
@@ -59,17 +64,18 @@ export default function getRegionElevation(map, progress, doneCallback) {
 
   function createAPI(visibleHeights) {
     let width = visibleHeights.windowWidth;
-    let data = visibleHeights.allHeights;
+    let allHeights = visibleHeights.allHeights;
 
     return {
       getHeightAtPoint,
+      windowHeight,
       getAllHeightData() {
         return visibleHeights;
       }
     };
 
     function getHeightAtPoint(x, y) {
-      return data[x + y * width];
+      return allHeights[x + y * width];
     }
   }
 
@@ -77,7 +83,6 @@ export default function getRegionElevation(map, progress, doneCallback) {
     const canvasWidth = canvas.width;
     const data = ctx.getImageData(0, 0, canvasWidth, canvas.height).data;
     const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
     let allHeights = new Float32Array(windowWidth * windowHeight);
     let done;
 
@@ -127,7 +132,7 @@ export default function getRegionElevation(map, progress, doneCallback) {
 
     function getHeight(x, y, insideMask) {
       let lngLat = map.transform.pointLocation({x, y})
-      if (!insideMask([lngLat.lng, lngLat.lat])) return -100;
+      if (!insideMask([lngLat.lng, lngLat.lat])) return -20;
 
       let xTile = lng2tile(lngLat.lng, zoomPower);
       let xOffset = (xTile - minX) * tileSize;
@@ -210,6 +215,11 @@ function lat2tile(l, zoomPower) {
         Math.PI) /
       2) * zoomPower 
   );
+}
+
+function tile2lat(y, zoomPower) {
+  let n = Math.PI - 2 * Math.PI * y / zoomPower;
+  return 180 / Math.PI * Math.atan(0.5*(Math.exp(n)-Math.exp(-n)));
 }
 
 function loadImage(url) {
