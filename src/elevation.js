@@ -4,41 +4,6 @@ import indexPolygon from "./lib/indexPolygon";
 const apiURL = `https://api.mapbox.com/v4/mapbox.terrain-rgb/zoom/tLong/tLat@2x.pngraw?access_token=${MAPBOX_TOKEN}`;
 let imageCache = new Map();
 
-export function loadImage(url) {
-  let cachedImage = imageCache.get(url);
-  if (!cachedImage) {
-    cachedImage = new Promise((resolve, error) => {
-      const img = new Image();
-      img.onload = () => {
-        resolve(img);
-      };
-      img.onerror = error;
-      img.crossOrigin = "anonymous";
-      img.src = url;
-    });
-    imageCache.set(url, cachedImage);
-  }
-
-  return cachedImage;
-}
-
-function getTilesBounds(tiles) {
-  return tiles.reduce((bounds, tile) => {
-    let p = tile.canonical;
-    if (bounds.minX > p.x) bounds.minX = p.x;
-    if (bounds.minY > p.y) bounds.minY = p.y;
-    if (bounds.maxX < p.x) bounds.maxX = p.x;
-    if (bounds.maxY < p.y) bounds.maxY = p.y;
-
-    return bounds;
-  }, {
-    minX: Infinity,
-    minY: Infinity,
-    maxX: -Infinity,
-    maxY: -Infinity
-  })
-}
-
 export function getRegionElevation(map, progress, doneCallback) {
   if (!progress) progress = {};
 
@@ -122,7 +87,7 @@ export function getRegionElevation(map, progress, doneCallback) {
     let rowWithHighestPoint = -1;
     let lastY = 0;
 
-    // // https://nominatim.openstreetmap.org/search.php?q=Mont%20Rainier&polygon_geojson=1&format=json
+    // // https://nominatim.openstreetmap.org/search.php?q=Canada&polygon_geojson=1&format=json
     // let geoResponse = require('./lib/fakeResponse.json')[0];
     let insideMask = indexPolygon(/* geoResponse */);
     heightsHandle = requestAnimationFrame(collectHeights); // todo let it be cancelled;
@@ -233,12 +198,12 @@ export function getRegionElevation(map, progress, doneCallback) {
   
 }
 
-export function lng2tile(l, zoomPower) {
+function lng2tile(l, zoomPower) {
   let result = ((l + 180) / 360) * zoomPower;
   return result;
 }
 
-export function lat2tile(l, zoomPower) {
+function lat2tile(l, zoomPower) {
   let angle = l * Math.PI / 180;
   return (
     ((1 - Math.log( Math.tan(angle) + 1 / Math.cos(angle)) /
@@ -247,6 +212,37 @@ export function lat2tile(l, zoomPower) {
   );
 }
 
-export function tile2long(x, zoomPower) {
-  return (x / zoomPower) * 360 - 180;
+function loadImage(url) {
+  let cachedImage = imageCache.get(url);
+  if (!cachedImage) {
+    cachedImage = new Promise((resolve, error) => {
+      const img = new Image();
+      img.onload = () => {
+        resolve(img);
+      };
+      img.onerror = error;
+      img.crossOrigin = "anonymous";
+      img.src = url;
+    });
+    imageCache.set(url, cachedImage);
+  }
+
+  return cachedImage;
+}
+
+function getTilesBounds(tiles) {
+  return tiles.reduce((bounds, tile) => {
+    let p = tile.canonical;
+    if (bounds.minX > p.x) bounds.minX = p.x;
+    if (bounds.minY > p.y) bounds.minY = p.y;
+    if (bounds.maxX < p.x) bounds.maxX = p.x;
+    if (bounds.maxY < p.y) bounds.maxY = p.y;
+
+    return bounds;
+  }, {
+    minX: Infinity,
+    minY: Infinity,
+    maxX: -Infinity,
+    maxY: -Infinity
+  })
 }

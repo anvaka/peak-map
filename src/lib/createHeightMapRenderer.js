@@ -39,7 +39,7 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
 
     let resHeight = window.innerHeight;
     let resWidth = window.innerWidth;
-    let rowCount = Math.round(resHeight * appState.lineDensity/100); 
+    let rowCount = Math.round(resHeight * appState.lineDensity / 100); 
     let scale = appState.heightScale;
 
     // since tiles can be partially overlapped, we use our own iterator

@@ -7,10 +7,10 @@
     </div>
     <div id="app" class='absolute'> 
       <div class='row control-panel'>
-        <a v-if='shouldDraw' href="#" class='draw settings' @click.prevent='settingsOpen = !settingsOpen' title='Toggle settings'>
+        <a v-if='shouldDraw' href="#" class='draw settings' @click.prevent='settingsOpen = !settingsOpen' title='Change appearance, export to SVG'>
           Customize...
         </a>
-        <a href="#" class='draw peaks' title='Draw the heightmap chart' @click.prevent='onMainActionClick'>{{mainActionText}}</a>
+        <a href="#" class='draw peaks' :title='mainActionTitle' @click.prevent='onMainActionClick'>{{mainActionText}}</a>
       </div>
       <div class='settings-form' v-if='settingsOpen'>
         <div v-if='shouldDraw'>
@@ -154,6 +154,8 @@ import Loading from './components/Loading';
 import About from './components/About';
 import generateZazzleLink from './lib/getZazzleLink';
 
+let scheduledResizeHandle;
+
 export default {
   name: 'App',
   data() {
@@ -170,7 +172,7 @@ export default {
     this.onResize = () => {
       this.width = window.innerWidth;
       this.height = window.innerHeight;
-      window.map.resize();
+      scheduleResize();
     }
     window.addEventListener('resize', this.onResize, true);
   },
@@ -185,6 +187,13 @@ export default {
         return 'Draw original map';
       }
       return 'Click here to draw peaks'
+    },
+    mainActionTitle() {
+      if (this.shouldDraw) {
+        return 'Show original map';
+      }
+      return 'Draw the elevation chart';
+
     }
   },
 
@@ -311,6 +320,14 @@ export default {
   }
 }
 
+function scheduleResize() {
+  if (scheduledResizeHandle) {
+    clearTimeout(scheduledResizeHandle);
+    scheduledResizeHandle = 0;
+  }
+  scheduledResizeHandle = setTimeout(() => window.map.resize(), 100);
+}
+
 function updateSizes(refs) {
   let dimensions = getCanvasDimensions();
   if (refs.map) {
@@ -363,6 +380,7 @@ function recordOpenClick(link) {
 border-color = #d8d8d8;
 primary-action-color = #ff4081;
 small-screen = 700px;
+app-width = 442px;
 
 .app-container {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
@@ -372,7 +390,7 @@ small-screen = 700px;
 }
 
 #app {
-  width: 442px;
+  width: app-width;
   background: white;
   z-index: 4;
   box-shadow: 0 0 20px rgba(0,0,0,.3);
@@ -561,7 +579,7 @@ a {
   position: absolute;
   top: 43px;
   left: 0;
-  width: 400px;
+  width: app-width;
   font-size: 12px;
   color: #333;
   opacity: 0;
@@ -582,6 +600,9 @@ a {
     width: 100%;
   }
 
+  .settings-form {
+    max-height: min(calc(100vh - 52px), 180px);
+  }
   .mapboxgl-ctrl-geocoder {
     display: none;
   }
