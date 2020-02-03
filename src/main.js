@@ -8,6 +8,7 @@ import { MAPBOX_TOKEN } from "./config";
 import getRegionElevation from './getRegionElevation';
 
 var MapboxGeocoder = require("@mapbox/mapbox-gl-geocoder");
+window.addEventListener('error', logError);
 
 // Load vue asyncronously
 require.ensure("@/vueApp.js", () => {
@@ -104,4 +105,16 @@ function updateMap() {
   function showRegionHeights(regionInfo) {
     heightMapRenderer = createHeightMapRenderer(appState, regionInfo, heightMapCanvas);
   }
+}
+
+
+function logError(e) {
+  if (typeof ga !== 'function') return;
+
+  const exDescription = e ? `${e.message} in ${e.filename}:${e.lineno}` : 'Unknown exception';
+
+  ga('send', 'exception', {
+    exDescription,
+    exFatal: false
+  });
 }

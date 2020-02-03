@@ -12,32 +12,8 @@
         </a>
         <a href="#" class='draw peaks' :title='mainActionTitle' @click.prevent='onMainActionClick'>{{mainActionText}}</a>
       </div>
-      <div class='settings-form' v-if='settingsOpen'>
+      <div class='settings-form' v-if='settingsOpen && shouldDraw'>
         <div v-if='shouldDraw'>
-          <div class='row'>
-            <div class='col'>Colors</div>
-            <div class='col colors c-2'>
-              <div class='color-container'>
-                <color-picker v-model='lineColor' @change='updateLinesColor'></color-picker>
-                <div class='color-label'>line stroke</div>
-              </div>
-              <div class='color-container'>
-                <color-picker v-model='lineBackground' @change='updateLinesColor'></color-picker>
-                <div class='color-label'>line fill</div>
-              </div>
-              <div class='color-container'>
-                <color-picker v-model='backgroundColor' @change='updateBackground'></color-picker>
-                <div class='color-label'>background</div>
-              </div>
-            </div>
-          </div>
-          <div class='row'>
-            <div class='col'>Line density</div>
-            <div class='col c-2'>
-              <input type="range" min="1" max="100" step="1" v-model="lineDensity"> 
-              <input type='number' :step='1' v-model='lineDensity'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='1' max='100'>
-            </div>
-          </div>
           <div class='row'>
             <div class='col'>Height scale</div>
             <div class='col c-2'>
@@ -46,41 +22,76 @@
             </div>
           </div>
           <div class='row'>
-            <div class='col'>Ocean level</div>
-            <div class='col c-2'>
-              <input type='range' min='-20' max='500' step='1' v-model='oceanLevel'> 
-              <input type='number' :step='1' v-model='oceanLevel' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' max='500' min='-20'>
-            </div>
-          </div>
-          <div class='row'>
-            <div class='col'>Smooth steps</div>
-            <div class='col c-2'>
-              <input type='range' min='1' max='12' step='1' v-model='smoothSteps'> 
-              <input type='number' :step='1' v-model='smoothSteps'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='1' max='12'>
-            </div>
-          </div>
-          <div class='row'>
-            <div class='col'>Line width</div>
-            <div class='col c-2'>
-              <input type='range' min='0.1' max='5' step='0.1' v-model='lineWidth'> 
-              <input type='number' :step='0.1' v-model='lineWidth'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='0.1' max='5'>
-            </div>
-          </div>
-          <div class='row'>
-            <div class='col'>Overlay opacity</div>
-            <div class='col c-2'>
-              <input type="range" min="1" max="100" step="1" v-model="mapOpacity"> 
-              <input type='number' :step='1' v-model='mapOpacity'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='1' max='100'>
-            </div>
-          </div>
-          <div class='row'>
-            <div class='col'>Map Angle</div>
-            <div class='col c-2'>
-              <input type="range" min="-180" max="180" step="1" v-model="angle"> 
-              <input type='number' :step='1' v-model='angle'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='-180' max='180'>
-            </div>
+              <div class='col'>Theme</div>
+              <div class='col c-2'>
+                <select v-model='selectedTheme'>
+                  <option v-for="theme in themes" v-bind:value="theme.value">{{theme.name}}</option>
+                </select>
+                <a href='#' @click.prevent='showThemeDetails = !showThemeDetails' :class="{'options-container-toggle': true, 'is-open': showThemeDetails}">{{ showThemeDetails ? 'hide options ' : 'show options' }}</a>
+              </div>
           </div>
 
+          <div v-if='showThemeDetails'  class='options-container'>
+            <div class='row'>
+              <div class='col'>Colors</div>
+              <div class='col colors c-2'>
+                <div class='color-container'>
+                  <color-picker v-model='lineColor' @change='updateLinesColor'></color-picker>
+                  <div class='color-label'>line stroke</div>
+                </div>
+                <div class='color-container'>
+                  <color-picker v-model='lineBackground' @change='updateLinesColor'></color-picker>
+                  <div class='color-label'>line fill</div>
+                </div>
+                <div class='color-container'>
+                  <color-picker v-model='backgroundColor' @change='updateBackground'></color-picker>
+                  <div class='color-label'>background</div>
+                </div>
+              </div>
+            </div>
+            <div class='row'>
+              <div class='col'>Line density</div>
+              <div class='col c-2'>
+                <input type="range" min="1" max="100" step="1" v-model="lineDensity"> 
+                <input type='number' :step='1' v-model='lineDensity'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='1' max='100'>
+              </div>
+            </div>
+            <div class='row'>
+              <div class='col'>Ocean level</div>
+              <div class='col c-2'>
+                <input type='range' min='-20' max='500' step='1' v-model='oceanLevel'> 
+                <input type='number' :step='1' v-model='oceanLevel' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' max='500' min='-20'>
+              </div>
+            </div>
+            <div class='row'>
+              <div class='col'>Smooth steps</div>
+              <div class='col c-2'>
+                <input type='range' min='1' max='12' step='1' v-model='smoothSteps'> 
+                <input type='number' :step='1' v-model='smoothSteps'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='1' max='12'>
+              </div>
+            </div>
+            <div class='row'>
+              <div class='col'>Line width</div>
+              <div class='col c-2'>
+                <input type='range' min='0.1' max='5' step='0.1' v-model='lineWidth'> 
+                <input type='number' :step='0.1' v-model='lineWidth'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='0.1' max='5'>
+              </div>
+            </div>
+            <div class='row'>
+              <div class='col'>Overlay opacity</div>
+              <div class='col c-2'>
+                <input type="range" min="1" max="100" step="1" v-model="mapOpacity"> 
+                <input type='number' :step='1' v-model='mapOpacity'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='1' max='100'>
+              </div>
+            </div>
+            <div class='row'>
+              <div class='col'>Map Angle</div>
+              <div class='col c-2'>
+                <input type="range" min="-180" max="180" step="1" v-model="angle"> 
+                <input type='number' :step='1' v-model='angle'  autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" min='-180' max='180'>
+              </div>
+            </div>
+          </div>
 
           <h3>Export</h3>
 
@@ -91,7 +102,7 @@
             </span>
           </div>
 
-          <div class='preview-actions'>
+          <div class='preview-actions' v-if='zazzleLink || generatingPreview || error'>
             <div v-if='zazzleLink' class='padded popup-help'>
               If your browser has blocked the new window, please <a :href='zazzleLink' target='_blank'>click here</a>
               to open it.
@@ -124,7 +135,8 @@
             </p>
             <p>
             You can find the entire <a href='https://github.com/anvaka/peak-map'>source code here</a>. 
-            If you love this website you can also <a href='https://www.paypal.com/paypalme2/anvakos/3'>buy me a coffee</a>, but you don't have to. I hope you enjoy the website!
+            I hope you enjoy the website! And if you truly do you can always <a href='https://www.patreon.com/anvaka'>become my patron</a> or just 
+            <a href='https://www.paypal.com/paypalme2/anvakos/3'>buy me a coffee</a>.
             </p>
           </div>
         </div>
@@ -153,6 +165,7 @@ import ColorPicker from './components/ColorPicker';
 import Loading from './components/Loading';
 import About from './components/About';
 import generateZazzleLink from './lib/getZazzleLink';
+import tinycolor from 'tinycolor2';
 
 let scheduledResizeHandle;
 
@@ -198,6 +211,15 @@ export default {
   },
 
   watch: {
+    selectedTheme(newValue) {
+      let themeDefinition = this.themes.find(x => x.value === newValue);
+      if (!themeDefinition) return; // how is this possible?
+
+      this.lineColor = tinycolor(themeDefinition.lineColor).toRgb();
+      this.lineBackground = tinycolor(themeDefinition.lineBackground).toRgb();
+      this.backgroundColor = tinycolor(themeDefinition.backgroundColor).toRgb();
+      this.redraw();
+    },
     angle(newValue) {
       let angle = Number.parseFloat(newValue);
       map.setBearing(angle);
@@ -379,6 +401,7 @@ function recordOpenClick(link) {
 <style lang='stylus'>
 border-color = #d8d8d8;
 primary-action-color = #ff4081;
+secondary-background = #eee;
 small-screen = 700px;
 app-width = 442px;
 
@@ -386,7 +409,6 @@ app-width = 442px;
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #2c3e50;
 }
 
 #app {
@@ -403,7 +425,26 @@ h3 {
   position: absolute;
   right: 8px;
 }
-
+.options-container {
+  border-top: 1px solid border-color;
+  border-bottom: 1px solid border-color;
+  background: secondary-background;
+  margin: 0 -16px;
+  padding: 8px 16px;
+}
+.options-container-toggle {
+  position: absolute;
+  height: 23px;
+  right: 8px;
+  display: block;
+  padding: 5px;
+  border: 1px solid transparent;
+}
+.options-container-toggle.is-open {
+  background: secondary-background;
+  border: 1px solid border-color;
+  border-bottom: 0;
+}
 .height-map {
   position: absolute;
   z-index: 3;
@@ -427,7 +468,8 @@ h3 {
   display: flex;
   flex: 1;
   select {
-    margin-left: 14px;
+    margin-right: 8px;
+    min-width: 120px;
   }
 
   input[type="range"] {
@@ -488,6 +530,7 @@ h3 {
 }
 
 .settings-form {
+  position: relative;
   padding: 8px 16px 8px 16px;
   overflow-y: auto;
   max-height: calc(100vh - 52px);
@@ -500,8 +543,13 @@ h3 {
 .mapboxgl-ctrl-top-right .mapboxgl-ctrl {
   margin: 0;
 }
+.app-container .mapboxgl-ctrl-geocoder{
+  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+}
+
 .mapboxgl-ctrl-geocoder input[type='text'] {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  height: 42px;
 }
 
 .preview-actions {
@@ -511,7 +559,9 @@ h3 {
   font-size: 14px;
   align-items: center;
   display: flex;
-  background-color: #e2e2e2
+  background-color: secondary-background;
+  border: 1px solid border-color;
+  margin: 8px -16px;
 
   .popup-help {
     text-align: center;

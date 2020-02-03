@@ -16,6 +16,27 @@ const appState = {
   renderProgress: null,
   width: window.innerWidth,
   height: window.innerHeight,
+  showThemeDetails: false,
+  selectedTheme: 'default',
+  themes: [{
+    value: 'default',
+    name: 'default',
+    backgroundColor: '#F7F2E8',
+    lineBackground: '#F7F2E8',
+    lineColor: 'rgb(22, 22, 22)'
+  }, {
+    value: 'dark', 
+    name: 'dark',
+    backgroundColor: '#3C3D3D',
+    lineBackground: '#3C3D3D',
+    lineColor: '#ffffff'
+  }, {
+    value: 'blue',
+    name: 'blue',
+    backgroundColor: '#101E33',
+    lineBackground: '#101E33',
+    lineColor: '#D1D8E3'
+  }],
 
   backgroundColor: {
     r: 0xF7, g: 0xF2, b: 0xE8, a: 1
