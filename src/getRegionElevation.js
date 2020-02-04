@@ -4,8 +4,8 @@ import indexPolygon from "./lib/indexPolygon";
 const apiURL = `https://api.mapbox.com/v4/mapbox.terrain-rgb/zoom/tLong/tLat@2x.pngraw?access_token=${MAPBOX_TOKEN}`;
 let imageCache = new Map();
 
-export default function getRegionElevation(map, progress, doneCallback) {
-  if (!progress) progress = {};
+export default function getRegionElevation(map, appState, doneCallback) {
+  const progress = appState.renderProgress || {};
 
   const {tileSize, tileZoom} = map.transform;
   const zoomPower = Math.pow(2, tileZoom);
@@ -80,6 +80,8 @@ export default function getRegionElevation(map, progress, doneCallback) {
   }
 
   function computeVisibleHeights() {
+    progress.message = 'Computing elevation lines...';
+
     const canvasWidth = canvas.width;
     const data = ctx.getImageData(0, 0, canvasWidth, canvas.height).data;
     const windowWidth = window.innerWidth;
@@ -92,9 +94,7 @@ export default function getRegionElevation(map, progress, doneCallback) {
     let rowWithHighestPoint = -1;
     let lastY = 0;
 
-    // // https://nominatim.openstreetmap.org/search.php?q=Canada&polygon_geojson=1&format=json
-    // let geoResponse = require('./lib/fakeResponse.json')[0];
-    let insideMask = indexPolygon(/* geoResponse */);
+    let insideMask = indexPolygon(appState.bounds);
     heightsHandle = requestAnimationFrame(collectHeights); // todo let it be cancelled;
 
     return new Promise((resolve) => { done = resolve });
@@ -116,6 +116,7 @@ export default function getRegionElevation(map, progress, doneCallback) {
         let elapsed = window.performance.now() - startTime;
         if (elapsed > timeQuota) {
           if (!isCancelled) heightsHandle = requestAnimationFrame(collectHeights);
+          progress.message = 'Computing elevation lines... ' + Math.round(100 * y/windowHeight) + '%';
           return;
         }
         lastY = y;

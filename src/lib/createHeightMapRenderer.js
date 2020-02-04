@@ -21,7 +21,7 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
     render
   }
 
-  function render(toSVG) {
+  function render(settings) {
     // let's set everything up to match our application state:
     if (appState.renderProgress) {
       appState.renderProgress.message = 'Rendering...'
@@ -60,7 +60,7 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
     let columnHeights;
     trueWindowHeight = window.innerHeight;
 
-    if (toSVG) {
+    if (settings && settings.svg) {
       // SVG needs hex values, not rgba, also ignore alpha
       lineStroke = getColor(appState.lineColor, /* useHex = */ true);
       columnHeights = new Float32Array(window.innerWidth);
@@ -71,7 +71,7 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
       for (let x = 0; x < window.innerWidth; ++x) {
         columnHeights[x] = trueWindowHeight; 
       }
-      return renderSVGRows();
+      return renderSVGRows(settings);
     } else {
       clearScene();
       return renderRows();
@@ -79,11 +79,12 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
 
     // Public part is over. Below is is just implementation detail
 
-    function renderSVGRows() {
-
+    function renderSVGRows(settings) {
       let svg = createSVGContext(window.innerWidth, window.innerHeight); // || ctx - they both work here.
       let row = 0;
       let width = window.innerWidth;
+      svg.fillStyle = getColor(appState.backgroundColor, /* useHex = */ true);
+      svg.fillRect(0, 0, window.innerWidth, window.innerHeight);
 
       for (let y = lastRow; y > 0; y -= iteratorSettings.step) {
         drawSVGLine(lastLine, svg);
@@ -109,7 +110,10 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
       drawSVGLine(lastLine, svg);
 
       appState.renderProgress = null;
+      if (settings && settings.labels) {
+      }
       if (svg.serialize) {
+        svg.appendLabels(settings && settings.labels);
         // ctx (used for debugging) doesn't have this method
         return svg.serialize();
       }

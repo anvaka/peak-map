@@ -24,6 +24,7 @@ appState.init = init;
 appState.redraw = redraw;
 appState.updateMap = updateMap;
 appState.exportToSVG = exportToSVG;
+appState.setBounds = setBounds;
 
 function init() {
   mapboxgl.accessToken = MAPBOX_TOKEN;
@@ -68,9 +69,11 @@ function redraw() {
   heightMapRenderer.render();
 }
 
-function exportToSVG() {
+function exportToSVG(settings) {
   if (!heightMapRenderer) return;
-  return heightMapRenderer.render(true);
+  return heightMapRenderer.render(Object.assign({
+    svg: true,
+  }, settings));
 }
 
 function updateMap() {
@@ -100,11 +103,26 @@ function updateMap() {
   };
 
   // This will fetch all heightmap tiles
-  regionBuilder = getRegionElevation(map, appState.renderProgress, showRegionHeights)
+  regionBuilder = getRegionElevation(map, appState,  showRegionHeights)
 
   function showRegionHeights(regionInfo) {
     heightMapRenderer = createHeightMapRenderer(appState, regionInfo, heightMapCanvas);
   }
+}
+
+function setBounds(bounds) {
+  appState.bounds = bounds;
+  if (bounds) {
+    appState.selectedBoundShortName = bounds.display_name;
+    appState.mapName = (bounds.display_name || '').split(',')[0]
+    const bbox = bounds.boundingbox;
+
+    map.fitBounds([[bbox[2], bbox[1]], [bbox[3], bbox[0]]], {animate: false})
+  } else {
+    appState.selectedBoundShortName = null;
+    appState.mapName = '';
+  }
+  updateMap();
 }
 
 

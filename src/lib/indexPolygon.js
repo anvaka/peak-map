@@ -3,8 +3,7 @@ var simplify = require('./simplify');
 
 
 export default function indexPolygon(nominatimResponse) {
-  return yes;
-  // Work in progress
+  if (!nominatimResponse) return yes;
   let {boundingbox} = nominatimResponse;
 
   let tolerance = (boundingbox[3] - boundingbox[2])/1000;
@@ -42,7 +41,6 @@ export default function indexPolygon(nominatimResponse) {
 
     let polygons = coordinates.map(polygon => {
       let final = simplify(polygon[0], tolerance);
-      console.log('before: ', polygon[0].length, 'After: ', final.length);
       return final;
     });
 

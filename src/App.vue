@@ -2,7 +2,7 @@
   <div class='app-container'>
     <div id='map' ref='map'></div>
     <canvas class='absolute height-map' ref='heightMap'></canvas>
-    <div id='progress' :style="{opacity: !settingsOpen && renderProgress ? 1 : 0}">
+    <div id='progress' :style="{opacity: renderProgress ? 1 : 0}">
       {{renderProgress && renderProgress.message}}
     </div>
     <div id="app" class='absolute'> 
@@ -17,15 +17,15 @@
           <div class='row'>
             <div class='col'>Height scale</div>
             <div class='col c-2'>
-              <input type='range' min='10' max='800' step='1' v-model='heightScale'> 
-              <input type='number' :step='1' v-model='heightScale'  autocomplete='off' autocorrect='off' autocapitalize="off" spellcheck="false" min='10' max='800'>
+              <input type='range' min='10' max='256' step='1' v-model='heightScale'> 
+              <input type='number' :step='1' v-model='heightScale'  autocomplete='off' autocorrect='off' autocapitalize="off" spellcheck="false" min='10' max='256'>
             </div>
           </div>
           <div class='row'>
               <div class='col'>Theme</div>
               <div class='col c-2'>
                 <select v-model='selectedTheme'>
-                  <option v-for="theme in themes" v-bind:value="theme.value">{{theme.name}}</option>
+                  <option v-for="(theme, index) in themes" :value="theme.value" :key='index'>{{theme.name}}</option>
                 </select>
                 <a href='#' @click.prevent='showThemeDetails = !showThemeDetails' :class="{'options-container-toggle': true, 'is-open': showThemeDetails}">{{ showThemeDetails ? 'hide options ' : 'show options' }}</a>
               </div>
@@ -93,6 +93,17 @@
             </div>
           </div>
 
+          <div class='row'>
+            <div class='col'>Boundaries</div>
+            <div class='col c-2'>
+              <div class='bounds-name' :title='boundsName'>{{boundsName}}</div>
+              <a href='#' @click.prevent='() => setBounds(null)' v-if='selectedBoundShortName' title='remove boundary constraints'>x</a>
+              <a href="#" @click.prevent='showBoundaryDetails = !showBoundaryDetails' :class="{'options-container-toggle': true, 'is-open': showBoundaryDetails}">show options</a>
+            </div>
+          </div>
+          <div v-if='showBoundaryDetails' class='options-container'>
+              <find-bounds></find-bounds>
+          </div>
           <h3>Export</h3>
 
           <div class='row'>
@@ -136,7 +147,7 @@
             <p>
             You can find the entire <a href='https://github.com/anvaka/peak-map'>source code here</a>. 
             I hope you enjoy the website! And if you truly do you can always <a href='https://www.patreon.com/anvaka'>become my patron</a> or just 
-            <a href='https://www.paypal.com/paypalme2/anvakos/3'>buy me a coffee</a>.
+            <a href='https://www.paypal.com/paypalme2/anvakos/3'>buy me a coffee</a>. Your patronage helps me pay for the API and coffee.
             </p>
           </div>
         </div>
@@ -156,6 +167,9 @@
     </div>
 
     <about v-if='aboutVisible' @close='aboutVisible = false'></about>
+
+    <editable-label v-if='shouldDraw && bounds' v-model='mapName' class='map-name' :printable='true' :style='{color: lineColorHex}'></editable-label>
+    <div v-if='shouldDraw && bounds' class='license printable' :style='{color: lineColorHex}'>data <a href='https://www.openstreetmap.org/about/' target="_blank" :style='{color: lineColorHex}'>© OpenStreetMap</a></div>
   </div>
 </template>
 
@@ -163,6 +177,8 @@
 import appState from './appState';
 import ColorPicker from './components/ColorPicker';
 import Loading from './components/Loading';
+import FindBounds from './components/FindBounds';
+import EditableLabel from './components/EditableLabel';
 import About from './components/About';
 import generateZazzleLink from './lib/getZazzleLink';
 import tinycolor from 'tinycolor2';
@@ -177,7 +193,9 @@ export default {
   components: {
     Loading,
     About,
-    ColorPicker
+    EditableLabel,
+    ColorPicker,
+    FindBounds
   },
   mounted() {
     updateSizes(this.$refs);
@@ -195,6 +213,9 @@ export default {
   },
 
   computed: {
+    boundsName() {
+      return this.selectedBoundShortName || 'unconstrained';
+    },
     mainActionText() {
       if (this.shouldDraw) {
         return 'Draw original map';
@@ -206,7 +227,9 @@ export default {
         return 'Show original map';
       }
       return 'Draw the elevation chart';
-
+    },
+    lineColorHex() {
+      return tinycolor(this.lineColor).toHexString();
     }
   },
 
@@ -265,7 +288,6 @@ export default {
     onMainActionClick() {
       this.shouldDraw = !this.shouldDraw;
     },
-
     updateBackground(x) {
       this.redraw();
     },
@@ -275,7 +297,9 @@ export default {
     },
 
     doExportToSVG() {
-      let string = appState.exportToSVG();
+      let string = appState.exportToSVG({
+        labels: collectText()
+      });
       if (!string) return;
       let blob = new Blob([string], {type: "text/xml"});
       let url = window.URL.createObjectURL(blob);
@@ -337,9 +361,42 @@ export default {
         blendedCtx.drawImage(heightMapCanvas, 0, 0, heightMapCanvas.width, heightMapCanvas.height, 0, 0, width, height);
       }
 
+      collectText().forEach(label => {
+        drawHtml(label, blendedCtx);
+      })
+
       return blended;
     }
   }
+}
+
+function collectText() {
+  return Array.from(
+    document.querySelectorAll('.printable')
+  ).map(element => {
+    let computedStyle = window.getComputedStyle(element);
+    let bounds = element.getBoundingClientRect();
+    let fontSize = Number.parseInt(computedStyle.fontSize, 10);
+    return {
+      text: element.innerText,
+      bounds,
+      fontSize,
+      color: computedStyle.color,
+      fontFamily: computedStyle.fontFamily,
+      fill: computedStyle.color,
+    }
+  });
+}
+
+function drawHtml(element, ctx) {
+  if (!element) return;
+  ctx.save();
+  let dpr = window.devicePixelRatio || 1;
+  ctx.font = dpr * element.fontSize + 'px ' + element.fontFamily;
+  ctx.fillStyle = element.color;
+  ctx.textAlign = 'end'
+  ctx.fillText(element.text, element.bounds.right * dpr, element.bounds.bottom * dpr)
+  ctx.restore();
 }
 
 function scheduleResize() {
@@ -399,11 +456,7 @@ function recordOpenClick(link) {
 </script>
 
 <style lang='stylus'>
-border-color = #d8d8d8;
-primary-action-color = #ff4081;
-secondary-background = #eee;
-small-screen = 700px;
-app-width = 442px;
+@import('./variables.styl');
 
 .app-container {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
@@ -461,6 +514,14 @@ h3 {
 .close-link.map-visible {
   display: flex;
   justify-content: space-between;
+}
+
+.bounds-name {
+  max-width: 120px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  margin-right: 4px;
 }
 
 .col {
@@ -625,22 +686,60 @@ a {
 
 #progress {
   transition: opacity .2s ease-in-out;
-  animation: blink 1.5s ease-in-out infinite alternate;
+  animation: blink 4.5s ease-in-out infinite alternate;
   position: absolute;
   top: 43px;
   left: 0;
-  width: app-width;
+  width: app-width - 1px;
+  z-index: 20;
   font-size: 12px;
-  color: #333;
+  color: white;
   opacity: 0;
   text-align: center;
-  background: rgba(255, 255, 255,.22);
+  background: rgb(255, 64, 129, 0.08);
   box-shadow: -1px 1px 4px rgba(134, 132, 132, 0.8)
   user-select: none;
+}
+
+@keyframes blink {
+    0% { background: rgba(255, 64, 129, 0.88);  }
+    33% { background: rgba(255, 64, 247, 0.88);  }
+    66% { background: rgba(64, 191, 255, 0.88);  }
+    100% { background: rgba(255, 64, 129, 0.88); }
 }
 .peaks {
   border-right: 1px solid border-color;
 }
+
+.map-name {
+  position: fixed;
+  right: 32px;
+  bottom: 54px;
+  font-size: 24px;
+  color: #434343;
+  z-index: 12;
+  min-height: 46px;
+  input {
+    font-size: 24px;
+    outline: none;
+  }
+}
+.license {
+  z-index: 12;
+  text-align: right;
+  position: fixed;
+  font-family: labels-font;
+  right: 32px;
+  bottom: 32px;
+  font-size: 12px;
+  padding-right: 8px;
+  a {
+    text-decoration: none;
+    display: inline-block;
+    color: primary-text;
+  }
+}
+
 
 @media (max-width: small-screen) {
   #app {
@@ -659,6 +758,14 @@ a {
 
   .title {
     font-size: 16px;
+  }
+  .map-name  {
+    right: 8px;
+    bottom: 24px;
+  }
+  .license  {
+    right: 8px;
+    bottom: 8px;
   }
 }
 </style>

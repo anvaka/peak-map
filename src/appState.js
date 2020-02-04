@@ -16,6 +16,12 @@ const appState = {
   renderProgress: null,
   width: window.innerWidth,
   height: window.innerHeight,
+  showBoundaryDetails: false,
+  selectedBoundShortName: null,
+  boundarySearchQuery: '',
+  boundarySearchResults: [],
+  bounds: null,
+  mapName: null,
   showThemeDetails: false,
   selectedTheme: 'default',
   themes: [{
@@ -36,6 +42,12 @@ const appState = {
     backgroundColor: '#101E33',
     lineBackground: '#101E33',
     lineColor: '#D1D8E3'
+  }, {
+    value: 'white', 
+    name: 'white',
+    backgroundColor: '#ffffff',
+    lineBackground: '#ffffff',
+    lineColor: '#000000'
   }],
 
   backgroundColor: {
