@@ -7,13 +7,18 @@
     </div>
     <div id="app" class='absolute'> 
       <div class='row control-panel'>
-        <a v-if='shouldDraw' href="#" class='draw settings' @click.prevent='settingsOpen = !settingsOpen' title='Change appearance, export to SVG'>
-          Customize...
+        <a v-if='shouldDraw'
+           href="#"
+           :class='{draw: true, settings: true, open: settingsOpen}'
+           @click.prevent='settingsOpen = !settingsOpen'
+           title='Change appearance, export to SVG'>
+           {{settingsOpen ? 'Close settings' : 'Customize...'}}
         </a>
         <a href="#" class='draw peaks' :title='mainActionTitle' @click.prevent='onMainActionClick'>{{mainActionText}}</a>
       </div>
       <div class='settings-form' v-if='settingsOpen && shouldDraw'>
         <div v-if='shouldDraw'>
+          <find-bounds></find-bounds>
           <div class='row'>
             <div class='col'>Height scale</div>
             <div class='col c-2'>
@@ -93,17 +98,7 @@
             </div>
           </div>
 
-          <div class='row'>
-            <div class='col'>Boundaries</div>
-            <div class='col c-2'>
-              <div class='bounds-name' :title='boundsName'>{{boundsName}}</div>
-              <a href='#' @click.prevent='() => setBounds(null)' v-if='selectedBoundShortName' title='remove boundary constraints'>x</a>
-              <a href="#" @click.prevent='showBoundaryDetails = !showBoundaryDetails' :class="{'options-container-toggle': true, 'is-open': showBoundaryDetails}">show options</a>
-            </div>
-          </div>
-          <div v-if='showBoundaryDetails' class='options-container'>
-              <find-bounds></find-bounds>
-          </div>
+<div v-if='!showLess'>
           <h3>Export</h3>
 
           <div class='row'>
@@ -151,11 +146,9 @@
             </p>
           </div>
         </div>
-
-        <div v-if='!shouldDraw'>
-          Draw peaks to see more options
-        </div>
+</div>
         <div class='close-link' :class="{'map-visible': shouldDraw}">
+          <a href="#" @click.prevent='showLess = !showLess'>{{showLess ? 'show more' : 'show less'}}</a>
           <a href="#" @click.prevent='settingsOpen = false'>close</a>
         </div>
       </div>
@@ -168,8 +161,8 @@
 
     <about v-if='aboutVisible' @close='aboutVisible = false'></about>
 
-    <editable-label v-if='shouldDraw && bounds' v-model='mapName' class='map-name' :printable='true' :style='{color: lineColorHex}'></editable-label>
-    <div v-if='shouldDraw && bounds' class='license printable' :style='{color: lineColorHex}'>data <a href='https://www.openstreetmap.org/about/' target="_blank" :style='{color: lineColorHex}'>© OpenStreetMap</a></div>
+    <editable-label v-if='shouldDraw && bounds && !renderProgress' v-model='mapName' class='map-name' :printable='true' :style='{color: lineColorHex}'></editable-label>
+    <div v-if='shouldDraw && bounds && !renderProgress' class='license printable' :style='{color: lineColorHex}'>data <a href='https://www.openstreetmap.org/about/' target="_blank" :style='{color: lineColorHex}'>© OpenStreetMap</a></div>
   </div>
 </template>
 
@@ -213,9 +206,6 @@ export default {
   },
 
   computed: {
-    boundsName() {
-      return this.selectedBoundShortName || 'unconstrained';
-    },
     mainActionText() {
       if (this.shouldDraw) {
         return 'Draw original map';
@@ -404,7 +394,9 @@ function scheduleResize() {
     clearTimeout(scheduledResizeHandle);
     scheduledResizeHandle = 0;
   }
-  scheduledResizeHandle = setTimeout(() => window.map.resize(), 100);
+  scheduledResizeHandle = setTimeout(() => {
+    window.map.resize();
+  }, 100);
 }
 
 function updateSizes(refs) {
@@ -416,7 +408,6 @@ function updateSizes(refs) {
     refs.map.style.height = px(dimensions.height);
   }
   setGuideLineSize(refs.heightMap, dimensions);
-  appState.updateMap();
 }
 
 function setGuideLineSize(el, dimensions) {
@@ -468,7 +459,7 @@ function recordOpenClick(link) {
   width: app-width;
   background: white;
   z-index: 4;
-  box-shadow: 0 0 20px rgba(0,0,0,.3);
+  box-shadow: 0 2px 4px rgba(0,0,0,.2);
 }
 h3 {
   font-weight: normal;
@@ -514,14 +505,6 @@ h3 {
 .close-link.map-visible {
   display: flex;
   justify-content: space-between;
-}
-
-.bounds-name {
-  max-width: 120px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  margin-right: 4px;
 }
 
 .col {
@@ -572,17 +555,24 @@ h3 {
   height: 42px;
   margin: 0;
   justify-items: stretch;
-  border-bottom: 1px solid border-color;
   a {
+    border-top: 2px solid transparent;
     display: flex;
     align-items: center;
+    border-bottom: 1px solid border-color;
   }
+  
   a.settings {
     border-right: 1px solid border-color;
     padding: 0 16px;
     &:hover {
       color: primary-action-color;
     }
+  }
+  a.settings.open {
+    box-shadow: 0 -3px 4px rgba(0,0,0,0.2);
+    border-top: 2px solid highlight-color;
+    border-bottom: none;
   }
   .draw {
     flex: 1;
@@ -592,7 +582,7 @@ h3 {
 
 .settings-form {
   position: relative;
-  padding: 8px 16px 8px 16px;
+  padding: 24px 16px 8px 16px;
   overflow-y: auto;
   max-height: calc(100vh - 52px);
   h3 {
@@ -605,7 +595,7 @@ h3 {
   margin: 0;
 }
 .app-container .mapboxgl-ctrl-geocoder{
-  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 4px rgba(0,0,0,.2)
 }
 
 .mapboxgl-ctrl-geocoder input[type='text'] {
@@ -717,7 +707,7 @@ a {
   bottom: 54px;
   font-size: 24px;
   color: #434343;
-  z-index: 12;
+  z-index: 3;
   min-height: 46px;
   input {
     font-size: 24px;
@@ -725,7 +715,7 @@ a {
   }
 }
 .license {
-  z-index: 12;
+  z-index: 3;
   text-align: right;
   position: fixed;
   font-family: labels-font;
@@ -749,9 +739,6 @@ a {
     width: 100%;
   }
 
-  .settings-form {
-    max-height: min(calc(100vh - 52px), 180px);
-  }
   .mapboxgl-ctrl-geocoder {
     display: none;
   }

@@ -19,18 +19,20 @@ require.ensure("@/vueApp.js", () => {
 let map;
 let heightMapRenderer;
 let regionBuilder;
+let isListening = false;
 // Let the vue know what to call to start the app.
 appState.init = init;
 appState.redraw = redraw;
 appState.updateMap = updateMap;
 appState.exportToSVG = exportToSVG;
 appState.setBounds = setBounds;
+appState.listenToEvents = listenToEvents;
 
 function init() {
   mapboxgl.accessToken = MAPBOX_TOKEN;
 
   window.map = map = new mapboxgl.Map({
-    trackResize: true,
+    trackResize: false,
     container: "map",
     minZoom: 0,
     style: "mapbox://styles/mapbox/light-v10",
@@ -44,17 +46,30 @@ function init() {
     "bottom-right"
   );
   map.addControl(new MapboxGeocoder({ accessToken: mapboxgl.accessToken }));
-  map.on('moveend', function() {
-    map.once('idle', updateMap)
-  });
-  map.on("movestart", hideHeights);
+  listenToEvents(true);
   map.on("load", function() {
     appState.angle = map.getBearing();
-    // map.showTileBoundaries = true;
   });
 
   map.dragRotate.disable();
   map.touchZoomRotate.disableRotation();
+}
+
+function listenToEvents(newIsListening) {
+  if (newIsListening) {
+    if (!isListening) {
+      map.on('moveend', updateMapWhenIdle);
+      map.on('movestart', hideHeights);
+    }
+    isListening = true;
+  } else {
+    map.off('moveend', updateMapWhenIdle);
+    map.off('movestart', hideHeights);
+  }
+}
+
+function updateMapWhenIdle() {
+  map.once('idle', updateMap)
 }
 
 function hideHeights() {
@@ -117,7 +132,15 @@ function setBounds(bounds) {
     appState.mapName = (bounds.display_name || '').split(',')[0]
     const bbox = bounds.boundingbox;
 
-    map.fitBounds([[bbox[2], bbox[1]], [bbox[3], bbox[0]]], {animate: false})
+    map.fitBounds([[bbox[2], bbox[1]], [bbox[3], bbox[0]]], {
+      animate: false,
+      padding: {
+        top: 42,
+        bottom: 0,
+        left: 0,
+        right: 0
+      }
+    })
   } else {
     appState.selectedBoundShortName = null;
     appState.mapName = '';
