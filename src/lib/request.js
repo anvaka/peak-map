@@ -1,16 +1,20 @@
+let cache = new Map();
+
 export default function request(url, options) {
   if (!options) options = {};
   let req;
-  let cancelable = new Promise(download);
-  cancelable.cancel = cancel;
 
-  return cancelable;
-
-  function cancel() {
-    if (req) {
-      req.abort();
-    }
+  if (options.cache) {
+    if (cache.has(url)) return cache.get(url);
   }
+
+  let downloadPromise = new Promise(download);
+  if (options.cache) {
+    cache.set(url, downloadPromise);
+  }
+
+  return downloadPromise;
+
 
   function download(resolve, reject) {
     req = new XMLHttpRequest();
