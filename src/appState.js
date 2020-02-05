@@ -1,3 +1,5 @@
+import tinycolor from 'tinycolor2';
+
 const appState = {
   angle: 0,
   currentState: 'intro',
@@ -22,11 +24,12 @@ const appState = {
   boundarySearchResults: [],
   bounds: null,
   mapName: null,
+  showLess: false,
   showThemeDetails: false,
-  selectedTheme: 'default',
+  selectedTheme: 'beige',
   themes: [{
-    value: 'default',
-    name: 'default',
+    value: 'beige',
+    name: 'beige',
     backgroundColor: '#F7F2E8',
     lineBackground: '#F7F2E8',
     lineColor: 'rgb(22, 22, 22)'
@@ -43,23 +46,24 @@ const appState = {
     lineBackground: '#101E33',
     lineColor: '#D1D8E3'
   }, {
+    value: 'emerald',
+    name: 'emerald',
+    backgroundColor: '#182217',
+    lineBackground: '#182217',
+    lineColor: '#2CFA8A',
+  }, {
     value: 'white', 
     name: 'white',
     backgroundColor: '#ffffff',
     lineBackground: '#ffffff',
     lineColor: '#000000'
   }],
-
-  backgroundColor: {
-    r: 0xF7, g: 0xF2, b: 0xE8, a: 1
-  },
-  lineBackground: {
-    // r: 255, g: 255, b: 255, a: 1
-    r: 0xF7, g: 0xF2, b: 0xE8, a: 1
-  },
-  lineColor: {
-    r: 22, g: 22, b: 22, a: 1.0
-  },
 };
+
+// TODO: This should probably live in App.vue
+let theme = appState.themes.find(theme => theme.name === appState.selectedTheme);
+appState.backgroundColor = tinycolor(theme.backgroundColor).toRgb();
+appState.lineBackground = tinycolor(theme.lineBackground).toRgb();
+appState.lineColor = tinycolor(theme.lineColor).toRgb();
 
 export default appState;
