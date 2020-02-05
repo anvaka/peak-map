@@ -16,8 +16,6 @@ const appState = {
   settingsOpen: false,
   shouldDraw: false,
   renderProgress: null,
-  width: window.innerWidth,
-  height: window.innerHeight,
   showBoundaryDetails: false,
   selectedBoundShortName: null,
   boundarySearchQuery: '',

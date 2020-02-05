@@ -20,8 +20,8 @@
       </div>
     </div>
 
-    <div class='results' v-if='!loading && editMode'>
-      <div v-if='suggestionsLoaded && suggestions.length' class='suggestions '>
+    <div class='results' v-if='!loading && editMode && suggestionsLoaded && suggestions.length' >
+      <div class='suggestions '>
         <ul>
           <li v-for='(suggestion, index) in suggestions' :key="index">
             <a @click.prevent='pickSuggestion(suggestion)' class='suggestion' href='#'>
@@ -32,17 +32,18 @@
           </li>
         </ul>
       </div>
-      <div v-if='suggestionsLoaded && !suggestions.length && !loading && !error && editMode' class='no-results message'>
-        Didn't find matching places. Try a different query?
-      </div>
+    </div>
 
-      <div v-if='error && editMode' class='error message'>
-        <div>Sorry, we were not able to fetch data from the OpenStreetMap.</div>
-        <div class='error-links'>
-          <a :href='getBugReportURL(error)' :title='"report error: " + error' target='_blank'>report this bug</a>
-        </div>
+    <div v-if='error && editMode' class='error message'>
+      <div>Sorry, we were not able to fetch data from the OpenStreetMap.</div>
+      <div class='error-links'>
+        <a :href='getBugReportURL(error)' :title='"report error: " + error' target='_blank'>report this bug</a>
       </div>
     </div>
+    <div v-if='suggestionsLoaded && !suggestions.length && !loading && !error && editMode' class='no-results message'>
+      Didn't find matching places. Try a different query?
+    </div>
+
 
     <div v-if='loading && editMode' class='loading message'>
       <loading-icon></loading-icon>
@@ -187,7 +188,7 @@ input {
 .results {
   box-shadow: 0 2px 4px rgba(0,0,0,.2);
   position: fixed;
-  width: 410px;
+  width: 409px;
   z-index: 4;
 }
 

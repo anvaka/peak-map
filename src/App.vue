@@ -98,7 +98,7 @@
             </div>
           </div>
 
-<div v-if='!showLess'>
+        <div v-if='!showLess'>
           <h3>Export</h3>
 
           <div class='row'>
@@ -176,8 +176,6 @@ import About from './components/About';
 import generateZazzleLink from './lib/getZazzleLink';
 import tinycolor from 'tinycolor2';
 
-let scheduledResizeHandle;
-
 export default {
   name: 'App',
   data() {
@@ -191,14 +189,11 @@ export default {
     FindBounds
   },
   mounted() {
-    updateSizes(this.$refs);
-    this.init();
     this.onResize = () => {
-      this.width = window.innerWidth;
-      this.height = window.innerHeight;
-      scheduleResize();
+      appState.sizeDirty = true;
     }
     window.addEventListener('resize', this.onResize, true);
+    appState.init();
   },
 
   beforeDestroy() {
@@ -265,14 +260,6 @@ export default {
       }
       this.updateMap();
     },
-
-    width() {
-      updateSizes(this.$refs);
-    },
-
-    height() {
-      updateSizes(this.$refs);
-    }
   },
   methods: {
     onMainActionClick() {
@@ -389,52 +376,6 @@ function drawHtml(element, ctx) {
   ctx.restore();
 }
 
-function scheduleResize() {
-  if (scheduledResizeHandle) {
-    clearTimeout(scheduledResizeHandle);
-    scheduledResizeHandle = 0;
-  }
-  scheduledResizeHandle = setTimeout(() => {
-    window.map.resize();
-  }, 100);
-}
-
-function updateSizes(refs) {
-  let dimensions = getCanvasDimensions();
-  if (refs.map) {
-    refs.map.style.left = px(dimensions.left);
-    refs.map.style.top = px(dimensions.top);
-    refs.map.style.width = px(dimensions.width);
-    refs.map.style.height = px(dimensions.height);
-  }
-  setGuideLineSize(refs.heightMap, dimensions);
-}
-
-function setGuideLineSize(el, dimensions) {
-  if (!el) return;
-  el.width = dimensions.width;
-  el.height = dimensions.height;
-  el.style.left = px(dimensions.left);
-  el.style.top = px(dimensions.top);
-  el.style.width = px(dimensions.trueWidth);
-  el.style.height = px(dimensions.trueHeight);
-}
-
-function px(x) {
-  return x + 'px';
-}
-
-function getCanvasDimensions() {
-  return {
-    width: appState.width,
-    height: appState.height,
-    left: 0,
-    top: 0,
-    trueWidth: window.innerWidth,
-    trueHeight: window.innerHeight
-  };
-}
-
 function recordOpenClick(link) {
   if (typeof ga === 'undefined') return;
 
@@ -478,7 +419,7 @@ h3 {
 }
 .options-container-toggle {
   position: absolute;
-  height: 23px;
+  height: 24px;
   right: 8px;
   display: block;
   padding: 5px;
@@ -584,10 +525,15 @@ h3 {
   position: relative;
   padding: 24px 16px 8px 16px;
   overflow-y: auto;
-  max-height: calc(100vh - 52px);
+  border-right: 1px solid border-color;
+  max-height: calc(100vh - 134px);
   h3 {
     margin: 8px 0 0 0;
     text-align: right;
+  }
+
+  input[type='number'] {
+    max-width: 42px;
   }
 }
 
@@ -678,7 +624,7 @@ a {
   transition: opacity .2s ease-in-out;
   animation: blink 4.5s ease-in-out infinite alternate;
   position: absolute;
-  top: 43px;
+  top: 41px;
   left: 0;
   width: app-width - 1px;
   z-index: 20;

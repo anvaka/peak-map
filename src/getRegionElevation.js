@@ -26,7 +26,7 @@ export default function getRegionElevation(map, appState, doneCallback) {
     // give a little bit of buffer at the bottom if possible
     let se = map.getBounds().getSouthEast();
     se.lat = tile2lat(tileBounds.maxY + 1, zoomPower);
-    windowHeight = map.project(se).y;
+    windowHeight = Math.floor(map.project(se).y);
   }
 
   const canvas = document.createElement("canvas");
@@ -101,6 +101,7 @@ export default function getRegionElevation(map, appState, doneCallback) {
 
     function collectHeights() {
       let startTime = window.performance.now();
+      let rowsProcessed = 0;
 
       for (let y = lastY; y < windowHeight; ++y) {
         for (let x = 0; x < windowWidth; ++x) {
@@ -113,8 +114,9 @@ export default function getRegionElevation(map, appState, doneCallback) {
             rowWithHighestPoint = y;
           }
         }
+        rowsProcessed += 1;
         let elapsed = window.performance.now() - startTime;
-        if (elapsed > timeQuota) {
+        if (elapsed > timeQuota && rowsProcessed > 3) {
           if (!isCancelled) heightsHandle = requestAnimationFrame(collectHeights);
           progress.message = 'Computing elevation lines... ' + Math.round(100 * y/windowHeight) + '%';
           return;

@@ -29,6 +29,8 @@ appState.setBounds = setBounds;
 appState.listenToEvents = listenToEvents;
 
 function init() {
+  updateSizes();
+
   mapboxgl.accessToken = MAPBOX_TOKEN;
 
   window.map = map = new mapboxgl.Map({
@@ -47,6 +49,7 @@ function init() {
   );
   map.addControl(new MapboxGeocoder({ accessToken: mapboxgl.accessToken }));
   listenToEvents(true);
+
   map.on("load", function() {
     appState.angle = map.getBearing();
   });
@@ -74,12 +77,14 @@ function updateMapWhenIdle() {
 
 function hideHeights() {
   appState.zazzleLink = null;
-  let canvas = document.querySelector(".height-map");
+  let canvas = getHeightMapCanvas();
   if (canvas) canvas.style.opacity = 0.02;
 }
 
 function redraw() {
   if (!heightMapRenderer) return;
+
+  ensureSizeIsUpdated();
   heightMapRenderer.cancel();
   heightMapRenderer.render();
 }
@@ -94,8 +99,10 @@ function exportToSVG(settings) {
 function updateMap() {
   if (!map) return;
 
-  let heightMapCanvas = document.querySelector(".height-map");
+  let heightMapCanvas = getHeightMapCanvas();
   if (!heightMapCanvas) return;
+
+  ensureSizeIsUpdated();
 
   if (heightMapRenderer) {
     heightMapRenderer.cancel();
@@ -148,6 +155,55 @@ function setBounds(bounds) {
   updateMap();
 }
 
+function ensureSizeIsUpdated() {
+  if (!appState.sizeDirty) return;
+  appState.sizeDirty = false;
+  updateSizes();
+}
+
+function updateSizes() {
+  let dimensions = getCanvasDimensions();
+  let mapContainer = getMapContainer();
+  if (mapContainer) {
+    mapContainer.style.left = px(dimensions.left);
+    mapContainer.style.top = px(dimensions.top);
+    mapContainer.style.width = px(dimensions.width);
+    mapContainer.style.height = px(dimensions.height);
+  }
+  if (map) {
+    map.resize();
+  }
+
+  const heightMapCanvas = getHeightMapCanvas();
+  if (heightMapCanvas) {
+    heightMapCanvas.width = dimensions.width;
+    heightMapCanvas.height = dimensions.height;
+    heightMapCanvas.style.left = px(dimensions.left);
+    heightMapCanvas.style.top = px(dimensions.top);
+    heightMapCanvas.style.width = px(dimensions.width);
+    heightMapCanvas.style.height = px(dimensions.height);
+  }
+
+  appState.sizeDirty = false;
+}
+
+function getHeightMapCanvas() {
+  return document.querySelector('.height-map')
+}
+function getMapContainer() {
+  return document.querySelector('#map');
+}
+
+function getCanvasDimensions() {
+  return {
+    left: 0,
+    top: 0,
+    width: window.innerWidth,
+    height: window.innerHeight,
+  };
+}
+
+
 
 function logError(e) {
   if (typeof ga !== 'function') return;
@@ -158,4 +214,8 @@ function logError(e) {
     exDescription,
     exFatal: false
   });
+}
+
+function px(x) {
+  return x + 'px';
 }
