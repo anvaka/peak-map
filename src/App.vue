@@ -162,7 +162,7 @@
     <about v-if='aboutVisible' @close='aboutVisible = false'></about>
 
     <editable-label v-if='shouldDraw && bounds && !renderProgress' v-model='mapName' class='map-name' :printable='true' :style='{color: lineColorHex}'></editable-label>
-    <div v-if='shouldDraw && bounds && !renderProgress' class='license printable' :style='{color: lineColorHex}'>data <a href='https://www.openstreetmap.org/about/' target="_blank" :style='{color: lineColorHex}'>© OpenStreetMap</a></div>
+    <div v-if='shouldDraw && bounds && !renderProgress' class='license printable' :style='{color: lineColorHex}'>data <a href='https://www.openstreetmap.org/about/' target="_blank" :style='{color: lineColorHex}'>© OpenStreetMap</a> <a href='https://www.mapbox.com/about/maps/' target="_blank" :style='{color: lineColorHex}'>© Mapbox</a></div>
   </div>
 </template>
 
@@ -434,7 +434,11 @@ h3 {
   position: absolute;
   z-index: 3;
   pointer-events: none;
+  opacity: 0;
   transition: opacity 100ms ease-in-out;
+  background-position: 0px 0px, 10px 10px;
+  background-size: 20px 20px;
+  background-image: linear-gradient(45deg, #bbb 25%, transparent 25%, transparent 75%, #bbb 75%, #bbb 100%),linear-gradient(45deg, #bbb 25%, white 25%, white 75%, #bbb 75%, #bbb 100%);
 }
 .close-link {
   margin-top: 8px;
