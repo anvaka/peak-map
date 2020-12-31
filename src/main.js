@@ -54,7 +54,7 @@ function init() {
     appState.angle = map.getBearing();
   });
 
-  map.dragRotate.disable();
+  // map.dragRotate.disable();
   map.touchZoomRotate.disableRotation();
 }
 
@@ -202,8 +202,6 @@ function getCanvasDimensions() {
     height: window.innerHeight,
   };
 }
-
-
 
 function logError(e) {
   if (typeof ga !== 'function') return;
