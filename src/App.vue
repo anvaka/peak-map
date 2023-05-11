@@ -377,13 +377,12 @@ function drawHtml(element, ctx) {
 }
 
 function recordOpenClick(link) {
-  if (typeof ga === 'undefined') return;
+  if (typeof gtag === 'undefined') return;
 
-  ga('send', 'event', {
-      eventCategory: 'Outbound Link',
-      eventAction: 'click',
-      eventLabel: link
-    });
+  gtag('event', 'click', {
+    'event_category': 'Outbound Link',
+    'event_label': link
+  });
 }
 </script>
 
