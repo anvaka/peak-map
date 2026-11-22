@@ -144,6 +144,9 @@
             I hope you enjoy the website! And if you truly do you can always <a href='https://www.patreon.com/anvaka'>become my patron</a> or just 
             <a href='https://www.paypal.com/paypalme2/anvakos/3'>buy me a coffee</a>. Your patronage helps me pay for the API and coffee.
             </p>
+            <p>
+            See my other projects at <a href='https://anvaka.com'>anvaka.com</a>.
+            </p>
           </div>
         </div>
 </div>
