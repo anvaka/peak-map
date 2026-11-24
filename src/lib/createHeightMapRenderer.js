@@ -86,7 +86,7 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
       svg.fillStyle = getColor(appState.backgroundColor, /* useHex = */ true);
       svg.fillRect(0, 0, window.innerWidth, window.innerHeight);
 
-      for (let y = lastRow; y > 0; y -= iteratorSettings.step) {
+      for (let y = lastRow; y >= iteratorSettings.start; y -= iteratorSettings.step) {
         drawSVGLine(lastLine, svg);
         lastLine = [];
         let isEven = (row % 2) === 0
@@ -289,7 +289,7 @@ export default function createHeightMapRenderer(appState, regionInfo, canvas) {
   function createRegionIterator(rowCount, resHeight, includeRowIndex) {
     let stepSize = Math.round(resHeight / rowCount);
     let start = includeRowIndex - Math.floor(includeRowIndex/stepSize) * stepSize;
-    let stop = start + stepSize * Math.floor((resHeight - start) / stepSize)
+    let stop = start + stepSize * Math.floor((resHeight - 1 - start) / stepSize)
 
     return {
       start,
